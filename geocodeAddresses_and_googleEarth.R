@@ -6,7 +6,11 @@
 
 getwd()
 
-# 2. IF you do not currently have lats and longs associated with your participant address file,
+# 2. Load the source file (this will not produce any output):
+
+source('/Users/bsevans/gits/Nestwatch/source_functions.R')
+
+# 3. IF you do not currently have lats and longs associated with your participant address file,
 # run the following function to write a new file that contains this file. NOTE: the file MUST
 # be in ".CSV" format!
 
@@ -16,7 +20,7 @@ getwd()
 writeAddressToLatLong(addressFilePath = '/Users/bsevans/gits/Nestwatch/addressFileExample.csv',
                       outPath = '/Users/bsevans/gits/Nestwatch/addressFileExampleLL.csv')
 
-# 3. Write KML. To do so, you must have already converted the participant address file to 
+# 4. Write KML. To do so, you must have already converted the participant address file to 
 # an address file that includes LatLongs.
 
 PointsToKML(addressFilePath = '/Users/bsevans/gits/Nestwatch/addressFileExampleLL.csv',
