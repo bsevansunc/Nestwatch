@@ -1,6 +1,8 @@
 library(leaflet)
 library(dplyr)
 
+r = raster('LandCover/r500mw')
+
 nn <- tbl_df(read.csv('exampleLL.csv')) %>%
   mutate(siteClass = 'existing')
 
@@ -12,13 +14,18 @@ newSites <- read.csv('nnPotentialSites.csv') %>%
 
 sites <- bind_rows(nn, newSites)
 
-pal  <- colorFactor(c('navy', 'red'), domain = c('existing','potential'))
-
+sitePal  <- colorFactor(c('navy', 'red'), domain = c('existing','potential'))
+impPal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), values(r),
+                              na.color = "transparent")
+  
 leaflet(data = sites) %>%
   addTiles() %>%
+  addRasterImage(r, colors = impPal, opacity = 0.8) %>%
   addCircleMarkers(~Long, ~Lat,
                    radius = 6,
-                   color = ~pal(siteClass),
+                   color = ~SitePal(siteClass),
                    stroke = F,
                    fillOpacity = 0.5,
                    popup = ~site)
+
+?writeRaster
