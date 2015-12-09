@@ -14,18 +14,23 @@ newSites <- read.csv('nnPotentialSites.csv') %>%
 
 sites <- bind_rows(nn, newSites)
 
+rAgg <- aggregate(r, 2, mean)
+
 sitePal  <- colorFactor(c('navy', 'red'), domain = c('existing','potential'))
-impPal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), values(r),
-                              na.color = "transparent")
+impPal <- colorNumeric(c("#A9A9A9", "#FFD700", "#FF0000"), 
+                       values(rAgg), na.color = "transparent")
+
+previewColors(colorNumeric(c('#A9A9A9','#FFD700','#FF0000'), domain = NULL), sort(rexp(16)))
+
   
 leaflet(data = sites) %>%
   addTiles() %>%
-  addRasterImage(r, colors = impPal, opacity = 0.8) %>%
+  addRasterImage(rAgg, colors = impPal, opacity = 0.8) %>%
   addCircleMarkers(~Long, ~Lat,
                    radius = 6,
-                   color = ~SitePal(siteClass),
+                   color = ~sitePal(siteClass),
                    stroke = F,
-                   fillOpacity = 0.5,
+                   fillOpacity = 0.8,
                    popup = ~site)
 
 ?writeRaster
