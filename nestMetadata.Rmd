@@ -31,7 +31,7 @@ _Important! Summary nest data should only be reported if the fate of the nest is
 *  Failed: Unknown
 *  Failed: Other
 
-**dateClutchNest**: _Character_. The date in which eggs were first layed in the nest, if observed. Use the standard date format YYYY-MM-DD, for example March 15, 2016 would be provided as 2016-03-15.
+**dateClutchNest**: _Character_. The date in which laying was completed for the nest (i.e., all eggs have been laid), if observed. Use the standard date format YYYY-MM-DD, for example March 15, 2016 would be provided as 2016-03-15.
 
 **plantSpNest**: _Character_. The species of plant in which the nest was located. Ideally this is the scientific name, if available.
 
@@ -40,6 +40,17 @@ _Important! Summary nest data should only be reported if the fate of the nest is
 **dateHatch**: _Character_. The date in which the first egg hatched, if observed. Use the standard date format YYYY-MM-DD, for example March 15, 2016 would be provided as 2016-03-15.
 
 **descriptionNest**: _Character_. A notes field providing any other information within the nest summary report.
+
+**dateFledgeFailNest**: _Character_. The date in which the nest was observed to have fledged or failed. Use the standard date format YYYY-MM-DD, for example March 15, 2016 would be provided as 2016-03-15.
+
+**locationNest**: _Character_. This field is based on a dropdown menu with the following choices:  
+
+*  Nestbox
+*  Shrub
+*  Tree
+*  Other
+
+**nestFateExplanation**: _Character_. This is a notes field that describes the fate of the nest if the nest fate was classified as "other".
 
 ----
 
