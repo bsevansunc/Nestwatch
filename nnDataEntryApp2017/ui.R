@@ -1,11 +1,9 @@
+# USER INTERFACE
+
 library(shiny)
 library(DT)
 
 source('setUp.R', local=TRUE)
-
-#=================================================================================*
-# ---- USER INTERFACE ----
-#=================================================================================*
 
 shinyUI(
   navbarPage(
@@ -20,8 +18,7 @@ shinyUI(
                      fluidRow(
                        column(3, selectInput('hub','Regional Hub:', choiceRegions)),
                        column(3, selectInput('inputType', 'New or existing site:',
-                                             c('Existing site',
-                                               'New site'))),
+                                             c('Existing site', 'New site'))),
                        column(3, uiOutput("ui")),
                        column(2, dateInput('date', 'Date of visit'))
                      ), width = 8
@@ -44,14 +41,199 @@ shinyUI(
       )
     ),
     inverse = TRUE,
-    #-------------------------------------------------------------------------------*
+    #===============================================================================*
     # ---- UI TAB PANEL: VISIT DATA ----
     #-------------------------------------------------------------------------------*
     tabPanel(strong('Visit data'),
-             sidebarLayout(
-               sidebarPanel(
-                 h4(strong('Location:')),
-                 br(),
+             fluidPage(
+               #--------------------------------------------------------------------*
+               # ---- Contact information ----
+               #--------------------------------------------------------------------*
+               h4(strong('Site contact information:')),
+               br(),
+               fluidRow(
+                 column(3, textInput('groupName', 'Group name')),
+                 column(3, textInput('lastName' ,'Last name')),
+                 column(3, textInput('firstName', 'First name'))
+               ),
+               br(),
+               fluidRow(
+                 column(2, textInput('phone1', 'Primary phone')),
+                 column(2, textInput('phone2' ,'Secondary phone')),
+                 column(3, textInput('email1', 'Email')),
+                 column(5, textInput('contactNotes', 'Contact notes'))
+               ),
+               br(),
+               fluidRow(column(6, ''),
+                        column(3, actionButton('submitContact', 
+                                               'Add record to table',
+                                               class = "btn-primary"))),
+               hr(),
+               DT::dataTableOutput("responsesContact"),
+               br(),
+               fluidRow(column(1, ''),
+                        column(4, actionButton("deleteContact",
+                                               "Delete contact record", 
+                                               class = "btn-primary")),
+                        column(3, ' '),
+                        column(4, actionButton('submitContactData', 
+                                               'Submit contact data',
+                                               class = "btn-primary"))
+               ),
+               br(), shinyjs::hidden(
+                 div(
+                   id = "thankyou_msgContact",
+                   h3("Thanks, your contact data have been recorded!")
+                 )
+               ),
+               br(),
+               hr(),
+               #--------------------------------------------------------------------*
+               # ---- Address information ----
+               #--------------------------------------------------------------------*
+               h4(strong('Site address information:')),
+               br(),
+               fluidRow(
+                 column(1, textInput('houseNumber', 'House number')),
+                 column(3, textInput('street' ,'Street')),
+                 column(3, textInput('city', 'City')),
+                 column(3, textInput('state', 'State')),
+                 column(2, textInput('zip', 'Zip code'))
+               ),
+               br(),
+               fluidRow(
+                 column(12, textInput('locationNotes', 'Location notes'))
+               ),
+               br(),
+               fluidRow(column(6, ''),
+                        column(3, actionButton('submitAddress', 
+                                               'Add record to table',
+                                               class = "btn-primary"))),
+               hr(),
+               DT::dataTableOutput("responsesAddress"),
+               br(),
+               fluidRow(column(1, ''),
+                        column(4, actionButton("deleteAddress",
+                                               "Delete address record", 
+                                               class = "btn-primary")),
+                        column(3, ' '),
+                        column(4, actionButton('submitAddressData', 
+                                               'Submit address data',
+                                               class = "btn-primary"))
+               ),
+               br(), shinyjs::hidden(
+                 div(
+                   id = "thankyou_msgAddress",
+                   h3("Thanks, your address data have been recorded!")
+                 )
+               ),
+               br(),
+               hr(),
+               #--------------------------------------------------------------------*
+               # ---- Location information ----
+               #--------------------------------------------------------------------*
+               h4(strong('Site location information:')),
+               br(),
+               fluidRow(
+                 column(2, dateInput('dateLocation', 'Date')),
+                 column(3, numericInput('long' ,'Longitude', NA)),
+                 column(3, numericInput('lat', 'Latitude', NA)),
+                 column(2, numericInput('accuracy', 'Accuracy', NA)),
+                 column(2, selectizeInput('locationMethod', 'Location method', 
+                                          choices = choiceLocationMethod))
+               ),
+               br(),
+               fluidRow(
+                 column(12, textInput('locationNotes', 'Location notes'))
+               ),
+               br(),
+               fluidRow(column(6, ''),
+                        column(3, actionButton('submitLocation', 
+                                               'Add record to table',
+                                               class = "btn-primary"))),
+               hr(),
+               DT::dataTableOutput("responsesLocation"),
+               br(),
+               fluidRow(column(1, ''),
+                        column(4, actionButton("deleteLocation",
+                                               "Delete location record", 
+                                               class = "btn-primary")),
+                        column(3, ' '),
+                        column(4, actionButton('submitLocationData', 
+                                               'Submit location data',
+                                               class = "btn-primary"))
+               ),
+               br(), shinyjs::hidden(
+                 div(
+                   id = "thankyou_msgLocation",
+                   h3("Thanks, your location data have been recorded!")
+                 )
+               ),
+               br(),
+               hr(),
+               #--------------------------------------------------------------------*
+               # ---- Visit information ----
+               #--------------------------------------------------------------------*
+               h4(strong('Site visit information:')),
+               br(),
+               fluidRow(
+                 column(2, dateInput('dateLocation', 'Date')),
+                 column(3, textInput('observerVisit' ,'Observer(s)')),
+                 column(7, '')
+               ),
+               fluidRow(
+                 selectizeInput('participantEngagement', 'Participant Engagement',
+                                choices = choiceParticipantEngagement)
+               ),
+               fluidRow(
+                 column(2, selectizeInput('encounteredBirds', 'Encountered birds',
+                                          choices = choiceEncounteredBirds)),
+                 column(2, numericInput('netMinutes6', 
+                                        '6 m nets', 
+                                        0)),
+                 column(2, numericInput('netMinutes9', 
+                                        '9 m nets', 
+                                        0)),
+                 column(2, numericInput('netMinutes12', 
+                                        '12 m nets', 
+                                        0)),
+                 column(2, numericInput('netMinutes18', 
+                                        '18 m nets', 
+                                        0))
+               ),
+               br(),
+               fluidRow(
+                 column(12, textInput('notesVisit', 'Visit notes'))
+               ),
+               br(),
+               fluidRow(column(6, ''),
+                        column(3, actionButton('submitVisit', 
+                                               'Add record to table',
+                                               class = "btn-primary"))),
+               hr(),
+               DT::dataTableOutput("responsesVisit"),
+               br(),
+               fluidRow(column(1, ''),
+                        column(4, actionButton("deleteVisit",
+                                               "Delete visit record", 
+                                               class = "btn-primary")),
+                        column(3, ' '),
+                        column(4, actionButton('submitVisitData', 
+                                               'Submit visit data',
+                                               class = "btn-primary"))
+               ),
+               br(), shinyjs::hidden(
+                 div(
+                   id = "thankyou_msgVisit",
+                   h3("Thanks, your visit data have been recorded!")
+                 )
+               ),
+               br(),
+               hr(),
+               #====================================================================*
+               #====================================================================*
+               #--------------------------------------------------------------------*
+               br(),
                  fluidRow(
                    column(4, 
                           textInput('longSite', 
