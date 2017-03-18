@@ -166,6 +166,12 @@ write_csv(visitTableWeb, 'visitTable.csv')
 
 write_csv(captureTableWeb, 'captureTable.csv')
 
+read.csv('captureTable.csv') %>%
+  tbl_df %>%
+  mutate(colorCombo = paste(colorL, colorR, sep = ',')) %>%
+  select(siteID:bandNumber, colorCombo, mass:notes) %>%
+  write_csv('captureTable.csv')
+
 queryTableWeb <- captureTableWeb %>%
   filter(enc == 'B') %>%
   select(siteID, dateVisit, spp, bandNumber, colorL, colorR) %>%
