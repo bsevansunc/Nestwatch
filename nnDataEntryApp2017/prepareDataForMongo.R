@@ -168,6 +168,10 @@ read.csv('siteLocationTable.csv') %>%
   select(siteID, date, long, lat, accuracy, locationMethod, locationNotes) %>%
   write_csv('siteLocationTable.csv')
 
+read.csv('siteLocationTable.csv') %>%
+  mutate(locationMethod = ifelse(locationMethod == 'locationEstimated', 'map', locationMethod)) %>%
+  write_csv('siteLocationTable.csv')
+
 write_csv(visitTableWeb, 'visitTable.csv')
 
 write_csv(captureTableWeb, 'captureTable.csv')
