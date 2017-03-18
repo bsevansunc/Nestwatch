@@ -162,6 +162,12 @@ write_csv(siteIdTableWeb, 'siteIdTable.csv')
 
 write_csv(siteLocationTableWeb, 'siteLocationTable.csv')
 
+read.csv('siteLocationTable.csv') %>%
+  tbl_df %>%
+  mutate(date = NA) %>%
+  select(siteID, date, long, lat, accuracy, locationMethod, locationNotes) %>%
+  write_csv('siteLocationTable.csv')
+
 write_csv(visitTableWeb, 'visitTable.csv')
 
 write_csv(captureTableWeb, 'captureTable.csv')
