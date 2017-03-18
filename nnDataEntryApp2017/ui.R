@@ -45,9 +45,9 @@ shinyUI(
     ),
     inverse = TRUE,
     #-------------------------------------------------------------------------------*
-    # ---- UI TAB PANEL: SITE DATA ----
+    # ---- UI TAB PANEL: VISIT DATA ----
     #-------------------------------------------------------------------------------*
-    tabPanel(strong('Site data'),
+    tabPanel(strong('Visit data'),
              sidebarLayout(
                sidebarPanel(
                  h4(strong('Location:')),
