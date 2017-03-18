@@ -12,18 +12,30 @@
 
 # Libraries:
 
-library(markdown)
-library(shiny)
-library(dplyr)
-library(tidyr)
-library(stringr)
-library(shinyBS)
-library(R.utils)
-# library(rdrop2)
-# library(googlesheets)
-library(DT)
-library(shinyjs)
-library(mongolite)
+# Survival simulation 
+#===============================================================================*
+# ---- SET-UP ----
+#===============================================================================*
+
+# Smart installer will check list of packages that are installed, install any
+# necessary package that is missing, and load the library:
+
+smartInstallAndLoad <- function(packageVector){
+  for(i in 1:length(packageVector)){
+    package <- packageVector[i]
+    if(!package %in% rownames(installed.packages())){
+      install.packages(packageVector[i],repos="http://cran.rstudio.com/",
+                       dependencies=TRUE)
+    }
+  }
+  lapply(packageVector, library, character.only = TRUE)
+}
+
+# Load and potentially install libraries:
+
+smartInstallAndLoad(c('markdown', 'tidyverse', 'stringr',
+                      'lubridate', 'shiny', 'shinyBS',
+                      'R.utils', 'DT', 'shinyjs', 'mongolite'))
 
 #---------------------------------------------------------------------------------*
 # ---- Source functions ----
@@ -31,7 +43,9 @@ library(mongolite)
 
 # The functions that make things go:
 
-source('helperFunctions.R', local=TRUE)
+source('helperFunctions.R', local = TRUE)
+
+source('generateColorCombos.R', local = TRUE)
 
 #---------------------------------------------------------------------------------*
 # ---- Some data loading ----
@@ -51,27 +65,25 @@ justAlphaCode <- aouCodes %>% .$Alpha
 
 # Add choice color combos as data frame:
 
-colorValues <- c('', 'A', 'BU', 'BR', 'BK', 'G','GY', 'O','PK', 'P','R', 'Y', 'W')
+colorValues <- c('B', 'N', 'K', 'G', 'E', 'O', 'P', 'M', 'R', 'Y', 'W')
 
-choiceColorCombos <- expand.grid(rep(list(colorValues), 4)) %>%
-  tbl_df %>%
-  transmute(L = paste(Var1, Var2, sep = '/'),
-            R = paste(Var3, Var4, sep = '/'), 
-            combo = paste(L, R, sep = ',')) %>%
-  select(-c(L, R)) %>%
-  filter(str_count(combo, 'A') == 1) %>%
-  mutate(combo = combo %>%
-           str_replace_all('/,', ',') %>%
-           str_replace_all(',/', ',') %>%
-           str_replace_all(',$',',-') %>%
-           str_replace_all('^,', '-,') %>%
-           str_replace_all('^/', '') %>%
-           str_replace_all('/$', '')) %>%
-  distinct %>% 
-  arrange(combo) %>%
-  .$combo
+colorComboList <- vector('list', length = 3)
+for(i in 1:length(colorComboList)){
+  colorComboList[[i]] <- getColorCombos(colorValues, i+1)
+}
 
-choiceColorCombos <- c('', choiceColorCombos)
+colorCombos <- bind_rows(colorComboList) %>%
+  mutate(colorL = ifelse(colorL == '', '-', colorL),
+         colorR = ifelse(colorR == '', '-', colorR)) %>%
+  bind_rows(
+    data.frame(colorL = 'X', colorR = '-'),
+    data.frame(colorL = '-', colorR = 'X')
+  ) %>%
+  distinct %>%
+  arrange(colorL, colorR) %>%
+  transmute(colorCombo = paste(colorL, colorR, sep = ',')) %>%
+  .$colorCombo %>% c('noData')
+
 
 # Entries for drop-down menu items:
 
