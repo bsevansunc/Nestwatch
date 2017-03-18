@@ -67,23 +67,24 @@ justAlphaCode <- aouCodes %>% .$Alpha
 
 colorValues <- c('B', 'N', 'K', 'G', 'E', 'O', 'P', 'M', 'R', 'Y', 'W')
 
-colorComboList <- vector('list', length = 3)
-for(i in 1:length(colorComboList)){
-  colorComboList[[i]] <- getColorCombos(colorValues, i+1)
+getAllPossibleCombos <- function(colorValues){
+  colorComboList <- vector('list', length = 3)
+  for(i in 1:length(colorComboList)){
+    colorComboList[[i]] <- getColorCombos(colorValues, i+1)
+  }
+  
+  colorCombos <- bind_rows(colorComboList) %>%
+    mutate(colorL = ifelse(colorL == '', '-', colorL),
+           colorR = ifelse(colorR == '', '-', colorR)) %>%
+    bind_rows(
+      data.frame(colorL = 'X', colorR = '-'),
+      data.frame(colorL = '-', colorR = 'X')
+    ) %>%
+    distinct %>%
+    arrange(colorL, colorR) %>%
+    transmute(colorCombo = paste(colorL, colorR, sep = ',')) %>%
+    .$colorCombo %>% c('noData')
 }
-
-colorCombos <- bind_rows(colorComboList) %>%
-  mutate(colorL = ifelse(colorL == '', '-', colorL),
-         colorR = ifelse(colorR == '', '-', colorR)) %>%
-  bind_rows(
-    data.frame(colorL = 'X', colorR = '-'),
-    data.frame(colorL = '-', colorR = 'X')
-  ) %>%
-  distinct %>%
-  arrange(colorL, colorR) %>%
-  transmute(colorCombo = paste(colorL, colorR, sep = ',')) %>%
-  .$colorCombo %>% c('noData')
-
 
 # Entries for drop-down menu items:
 
