@@ -529,11 +529,6 @@ shinyUI(
                    column(2, '')),
                  hr(),
                  fluidRow(
-                   column(7, h5(strong('Encounter type:'))),
-                   column(5, checkboxInput('showAllEncounterType',
-                                           'Show all',
-                                           value = TRUE))),
-                 fluidRow(
                    column(10, 
                           selectizeInput('encounterTypeQuery', '',
                                          choices = choiceEncounterType)),
