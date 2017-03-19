@@ -20,7 +20,7 @@ names(choiceRegions) <- choiceRegions
 # ---- CONTACT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesContactInfo <- read.csv('startData/contactTableNames.csv')$names
+fieldCodesContactInfo <- read.csv('startData/contactNames.csv')$names
 
 fieldNamesContactInfo <- fieldNamesSite <- c(
   'siteID', 'School or group name', 'Last name', 'First name', 'Primary phone',
@@ -30,7 +30,7 @@ fieldNamesContactInfo <- fieldNamesSite <- c(
 # ---- ADDRESS TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesAddress <- read.csv('startData/addressTableNames.csv')$names
+fieldCodesAddress <- read.csv('startData/addressNames.csv')$names
 
 fieldNamesAddress <- fieldNamesSite <- c(
   'siteID', 'House number', 'Street', 'City', 'State',
@@ -40,7 +40,7 @@ fieldNamesAddress <- fieldNamesSite <- c(
 # ---- LOCATION TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesLocation <- read.csv('startData/siteLocationTableNames.csv')$names
+fieldCodesLocation <- read.csv('startData/siteLocationNames.csv')$names
 
 fieldNamesLocation <- c('siteID', 'Date', 'Longitude', 'Latitude', 'Accuracy',
                         'Location method', 'Location notes')
@@ -56,7 +56,7 @@ choiceLocationMethod <- c('noData', 'GPS', 'map')
 # ---- VISIT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesVisit <- read.csv('startData/visitTableNames.csv')$names
+fieldCodesVisit <- read.csv('startData/visitNames.csv')$names
 
 fieldNamesVisit <- c('siteID', 'Date', 'Observer(s)', 'Participant engagement',
                      'Encountered birds', 'Net hours', 'Visit notes')
@@ -82,7 +82,7 @@ choiceEncounteredBirds <- c('noData', 'Yes', 'No')
 # ---- CAPTURE TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesCaptureTable <- read.csv('startData/captureTableNames.csv')$names
+fieldCodesCaptureTable <- read.csv('startData/captureNames.csv')$names
 
 fieldNamesCaptureTable <- c(
   'siteID', 'Date', 'Time', 'Obs','ENC', 'SPP', 'Band #',
@@ -121,7 +121,7 @@ choiceFat <- c('noData', 0, 0.5, seq(1:5))
 # ---- RESIGHT FORAY EFFORT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesForayEffort <- read.csv('startData/forayEffortTableNames.csv')$names
+fieldCodesForayEffort <- read.csv('startData/forayEffortNames.csv')$names
 
 fieldNamesForayEffort <- c(
   'siteID', 'Date', 'Obs', 'Foray start', 'Foray end', 'Path distance (m)',
