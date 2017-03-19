@@ -93,4 +93,3 @@ source('fieldOptions.R', local = TRUE)
 # Paragraphs, field descriptions, and such:
 
 source('textComponents.R', local = TRUE)
-
