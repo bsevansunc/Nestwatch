@@ -20,7 +20,7 @@ names(choiceRegions) <- choiceRegions
 # ---- CONTACT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesContactInfo <- read.csv('startData/contactTable.csv') %>% names
+fieldCodesContactInfo <- read.csv('startData/contactTableNames.csv')$names
 
 fieldNamesContactInfo <- fieldNamesSite <- c(
   'siteID', 'School or group name', 'Last name', 'First name', 'Primary phone',
@@ -30,7 +30,7 @@ fieldNamesContactInfo <- fieldNamesSite <- c(
 # ---- ADDRESS TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesAddress <- read.csv('startData/addressTable.csv') %>% names
+fieldCodesAddress <- read.csv('startData/addressTableNames.csv')$names
 
 fieldNamesAddress <- fieldNamesSite <- c(
   'siteID', 'House number', 'Street', 'City', 'State',
@@ -40,7 +40,7 @@ fieldNamesAddress <- fieldNamesSite <- c(
 # ---- LOCATION TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesLocation <- read.csv('startData/siteLocationTable.csv') %>% names
+fieldCodesLocation <- read.csv('startData/siteLocationTableNames.csv')$names
 
 fieldNamesLocation <- c('siteID', 'Date', 'Longitude', 'Latitude', 'Accuracy',
                         'Location method', 'Location notes')
@@ -56,7 +56,7 @@ choiceLocationMethod <- c('noData', 'GPS', 'map')
 # ---- VISIT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesVisit <- read.csv('startData/visitTable.csv') %>% names
+fieldCodesVisit <- read.csv('startData/visitTableNames.csv')$names
 
 fieldNamesVisit <- c('siteID', 'Date', 'Observer(s)', 'Participant engagement',
                      'Encountered birds', 'Net hours', 'Visit notes')
@@ -82,7 +82,7 @@ choiceEncounteredBirds <- c('noData', 'Yes', 'No')
 # ---- CAPTURE TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesCaptureTable <- read.csv('startData/captureTable.csv') %>% names
+fieldCodesCaptureTable <- read.csv('startData/captureTableNames.csv')$names
 
 fieldNamesCaptureTable <- c(
   'siteID', 'Date', 'Time', 'Obs','ENC', 'SPP', 'Band #',
@@ -118,28 +118,44 @@ choiceBreedingCond <-  c('noData','CP', 'BP')
 choiceFat <- c('noData', 0, 0.5, seq(1:5))
 
 #---------------------------------------------------------------------------------*
-# ---- RESIGHT FORAY TABLE ----
+# ---- RESIGHT FORAY EFFORT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesResightEffort <- read.csv('startData/resightEffortTable.csv') %>% names
+fieldCodesForayEffort <- read.csv('startData/forayEffortTableNames.csv')$names
 
-fieldNamesResightEffort <- c(
+fieldNamesForayEffort <- c(
   'siteID', 'Date', 'Obs', 'Foray start', 'Foray end', 'Path distance (m)',
   'spp unbanded', 'Count unbanded'
 )
 
 choicePathDistance <- c('noData', 0:10000)
 
-choiceCountUnbaded <- c('noData',  0:100)
+#---------------------------------------------------------------------------------*
+# ---- RESIGHT FORAY COUNT UNBANDED TABLE ----
+#---------------------------------------------------------------------------------*
+
+forayCountUnbandedNames <- read.csv('startData/forayCountUnbandedNames.csv')$names
+
+
+choiceCountUnbanded <- c('noData',  0:100)
+
+#---------------------------------------------------------------------------------*
+# ---- RESIGHT TECHNICIAN TABLE ----
+#---------------------------------------------------------------------------------*
+
+techRsNames <- read.csv('startData/techRsNames.csv')$names
+
+choiceTypeRs <- c('noData', 'I', 'F')
+
+
 
 #---------------------------------------------------------------------------------*
 # ---- POINT COUNTS ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesPointCount <- read.csv('startData/pcTable.csv') %>%
-  rename(siteID = visitID) %>% names
+fieldCodesPc <- read.csv('startData/pcNames.csv')$names
 
-fieldNamesPointCount <- c(
+fieldNamesPc <- c(
   'siteID','Date', 'Obs', 'Start time', 'Interval', 'SPP',
   'D0-10', 'D10-20', 'D20-30', 'D30-40', 'D40-50'
 )
