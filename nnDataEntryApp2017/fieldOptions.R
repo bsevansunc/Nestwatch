@@ -50,6 +50,8 @@ choiceDate <- c('noData', seq(
   as.Date(ISOdate(2030, 1, 1)), 1) %>%
     as.character)
 
+choiceLocationMethod <- c('noData', 'GPS', 'map')
+
 #---------------------------------------------------------------------------------*
 # ---- VISIT TABLE ----
 #---------------------------------------------------------------------------------*
@@ -60,6 +62,21 @@ fieldNamesVisit <- c('siteID', 'Date', 'Observer(s)', 'Participant engagement',
                      'Encountered birds', 'Net hours', 'Visit notes')
 
 choiceNetMinutes <- c('noData', 0:2000)
+
+choiceParticipantEngagement <- c('noData', '-', 0:5)
+
+names(choiceParticipantEngagement) <- c(
+  'noData',
+  'No visit was scheduled',
+  'Participant should be avoided in the future',
+  'Participant was not present or showed no interest during visit activities',
+  'Participant showed only slight interest during visit activities',
+  'Participant contributed during one of the visit activities (e.g., banding)',
+  'Participant contributed during two-three of visit activities (e.g., banging and resight foray)',
+  'Participant contributed during all visit activities'
+)
+
+choiceEncounteredBirds <- c('noData', 'Yes', 'No')
 
 #---------------------------------------------------------------------------------*
 # ---- CAPTURE TABLE ----
