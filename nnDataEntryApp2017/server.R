@@ -13,84 +13,99 @@ library(lubridate)
 
 mongoURL <- 'mongodb://bsevans:33shazam@ds025232.mlab.com:25232/nndataentry'
 
-# Load data:
-
-siteIdMongo <-  mongo('siteIdTable', url = mongoURL)
-siteIdTable <- siteMongo$find() %>%
-  mongoToTblDf
-
-
 server <- function(input, output, session) {
-  
+
   #-------------------------------------------------------------------------------*
   # ---- SERVER: LOAD MONGO DATA ----
   #-------------------------------------------------------------------------------*
+  # Load data:
+#   siteIdMongo <-  mongo('siteIdTable', url = mongoURL)
+#   siteIdTable <- siteIdMongo$find() %>%
+#     mongoToTblDf
   
-  tableValues <- reactiveValues()
+  # Set site inputs:
+  output$moreControls <- renderUI({
+    tagList(
+      sliderInput("n", "N", 1, 1000, 500),
+      textInput("label", "Label")
+    )
+  })
+  
+#   output$uiSite <- renderUI({
+#     textInput('label', 'Label')
+#   })
+  
+  # Object for storing reactive values:
+  
+  # tableValues <- reactiveValues()
   
   # SiteId table filtered by hub:
   
-  observe({
-    if(!is.null(input$hub)){
-      if(input$hub != 'noData'){
-        # siteMongo <- mongo('site_data', url = mongoURL)
-        # siteHubTable <- siteMongo$find(
-        #   query = hubQuery('hub', input$hub),
-        #   fields = '{"_row" : 0, "_id" : 0}') %>%
-        #   mongoToTblDf
-        siteHubTable <- siteIdTable %>%
-          filter(region == input$hub)
-        if(nrow(siteHubTable) > 0){
-          tableValues$siteHub <- siteHubTable %>%
-            select(one_of(fieldCodesSite))
-        } else {
-          tableValues$siteHub <- emptyDataFrame(fieldCodesSite)
-        }
-      }
-    }
-  })
-  
-  # ContactInfo table filtered by site:
-  
-  observe({
-    if(!is.null(input$hub)){
-      if(input$hub != 'noData'){
-        contactInfoMongo <- mongo('contactInfoTable', url = mongoURL)
-        contactInfoTable <- contactInfoMongo$find(
-          query = siteQuery('siteId', input$siteId),
-          fields = '{"_row" : 0, "_id" : 0}') %>%
-          mongoToTblDf
-        if(nrow(contactInfoTable) > 0){
-          tableValues$contactInfo <- contactInfoTable %>%
-            select(one_of(fieldCodesContactInfo))
-        } else {
-          tableValues$contactInfo <- emptyDataFrame(fieldCodesContactInfo)
-        }
-      }
-    }
-  })
-  
-  # Address table filtered by site:
-  
-  observe({
-    if(!is.null(input$hub)){
-      if(input$hub != 'noData'){
-        addressMongo <- mongo('addressTable', url = mongoURL)
-        addressTable <- addressMongo$find(
-          query = siteQuery('siteId', input$siteId),
-          fields = '{"_row" : 0, "_id" : 0}') %>%
-          mongoToTblDf
-        if(nrow(addressTable) > 0){
-          tableValues$address <- addressTable %>%
-            select(one_of(fieldCodesAddress))
-        } else {
-          tableValues$address <- emptyDataFrame(fieldCodesAddress)
-        }
-      }
-    }
-  })
-  
-  
+#   observe({
+#     tableValues$siteHub <- siteIdTable %>%
+#       filter(region == input$hub)
+# #     if(!is.null(input$hub)){
+# #       if(input$hub != 'noData'){
+#         # siteMongo <- mongo('site_data', url = mongoURL)
+#         # siteHubTable <- siteMongo$find(
+#         #   query = hubQuery('hub', input$hub),
+#         #   fields = '{"_row" : 0, "_id" : 0}') %>%
+#         #   mongoToTblDf
+# #         tableValues$siteHub <- siteIdTable %>%
+# #           filter(region == input$hub)
+# #         siteHubTable <- siteIdTable %>%
+# #           filter(region == input$hub)
+# #         if(nrow(siteHubTable) > 0){
+# #           tableValues$siteHub <- siteHubTable %>%
+# #             select(one_of(fieldCodesSite))
+# #         } else {
+# #           tableValues$siteHub <- emptyDataFrame(fieldCodesSite)
+# #         }
+# #       }
+# #     }
+#   })
+#   
+#   # ContactInfo table filtered by site:
+#   
+#   observe({
+#     if(!is.null(input$hub)){
+#       if(input$hub != 'noData'){
+#         contactInfoMongo <- mongo('contactInfoTable', url = mongoURL)
+#         contactInfoTable <- contactInfoMongo$find(
+#           query = siteQuery('siteId', input$siteId),
+#           fields = '{"_row" : 0, "_id" : 0}') %>%
+#           mongoToTblDf
+#         if(nrow(contactInfoTable) > 0){
+#           tableValues$contactInfo <- contactInfoTable %>%
+#             select(one_of(fieldCodesContactInfo))
+#         } else {
+#           tableValues$contactInfo <- emptyDataFrame(fieldCodesContactInfo)
+#         }
+#       }
+#     }
+#   })
+#   
+#   # Address table filtered by site:
+#   
+#   observe({
+#     if(!is.null(input$hub)){
+#       if(input$hub != 'noData'){
+#         addressMongo <- mongo('addressTable', url = mongoURL)
+#         addressTable <- addressMongo$find(
+#           query = siteQuery('siteId', input$siteId),
+#           fields = '{"_row" : 0, "_id" : 0}') %>%
+#           mongoToTblDf
+#         if(nrow(addressTable) > 0){
+#           tableValues$address <- addressTable %>%
+#             select(one_of(fieldCodesAddress))
+#         } else {
+#           tableValues$address <- emptyDataFrame(fieldCodesAddress)
+#         }
+#       }
+#     }
+#   })
+#   
+############################################################################## 
 #   
 #   # Visit data filtered by site:
 #   
@@ -202,31 +217,45 @@ server <- function(input, output, session) {
 
   # Given a hub input, get vector of sites:
 
-  siteChoices <- reactive({
-    sites <- ''
-    if(!is.null(input$hub)){
-      if(input$hub != ''){
-        sites <- tableValues$siteHub %>%
-          arrange(site) %>%
-          .$site
-      }
-    }
-    c('', sites)
-  })
+  # siteChoices <- reactive({
+#     if(input$hub != 'noData'){
+#       sites <- c('noData', tableValues$siteHub %>%
+#         arrange(siteID) %>%
+#         .$siteID
+#       )
+#     } else {
+#     sites<- c('noData')
+#     }
+#     sites
+#     sites <- ''
+#     if(!is.null(input$hub)){
+#       if(input$hub != ''){
+#         sites <- tableValues$siteHub %>%
+#           arrange(site) %>%
+#           .$site
+#       }
+#     }
+#     c('', sites)
+#   })
 
   # If it is a new site, type it in, otherwise retrieve vector of sites:
 
-  output$ui <- renderUI({
-    if (is.null(input$inputType))
-      return()
-    switch(input$inputType,
-           'New site' = textInput("site", "Site:", ''),
-           'Existing site' = selectInput("site", "Site:",
-                                         choices = siteChoices())
-    )
-  })
+#   output$uiSite <- renderUI({
+#     tagList(
+#       textInput('siteId', 'Site')
+#     )
+#   })
+    
+#     if (is.null(input$inputType))
+#       return()
+#     switch(input$inputType,
+           # 'New site' = textInput("siteId", "Site:", ''),
+#            'Existing site' = selectInput("siteId", "Site:",
+#                                          choices = siteChoices())
+    # )
+  # })
 
-  selectedSite <- reactive(input$site)
+  # selectedSite <- reactive(input$site)
 #   
 #   # Once OBSERVERS are written on the visit page, have this be the default entry:
 #   
