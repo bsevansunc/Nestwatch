@@ -5,9 +5,9 @@
 siteIdTable <- read.csv('startData/siteIdTable.csv') %>%
   tbl_df
 
-fieldCodesSite <- names(siteIdTable)
+fieldCodesSiteId <- names(siteIdTable)
 
-fieldNamesSite <- c('siteID', 'Region')
+fieldNamesSiteId <- c('siteID', 'Region')
 
 # Choices of NN regions:
 
