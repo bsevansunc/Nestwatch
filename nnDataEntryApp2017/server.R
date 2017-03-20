@@ -14,58 +14,100 @@ library(lubridate)
 mongoURL <- 'mongodb://bsevans:33shazam@ds025232.mlab.com:25232/nndataentry'
 
 server <- function(input, output, session) {
-
+  # Storage container for reactive data:
+  
+  tableValues <- reactiveValues()
+  
   #-------------------------------------------------------------------------------*
   # ---- SERVER: LOAD MONGO DATA ----
   #-------------------------------------------------------------------------------*
   # Load data:
-#   siteIdMongo <-  mongo('siteIdTable', url = mongoURL)
-#   siteIdTable <- siteIdMongo$find() %>%
-#     mongoToTblDf
-  
-  # Set site inputs:
-  output$moreControls <- renderUI({
-    tagList(
-      sliderInput("n", "N", 1, 1000, 500),
-      textInput("label", "Label")
-    )
-  })
-  
-#   output$uiSite <- renderUI({
-#     textInput('label', 'Label')
-#   })
-  
-  # Object for storing reactive values:
-  
-  # tableValues <- reactiveValues()
+  siteIdMongo <-  mongo('siteIdTable', url = mongoURL)
+  siteIdTable <- siteIdMongo$find() %>%
+    mongoToTblDf
   
   # SiteId table filtered by hub:
   
-#   observe({
-#     tableValues$siteHub <- siteIdTable %>%
-#       filter(region == input$hub)
-# #     if(!is.null(input$hub)){
-# #       if(input$hub != 'noData'){
-#         # siteMongo <- mongo('site_data', url = mongoURL)
-#         # siteHubTable <- siteMongo$find(
-#         #   query = hubQuery('hub', input$hub),
-#         #   fields = '{"_row" : 0, "_id" : 0}') %>%
-#         #   mongoToTblDf
-# #         tableValues$siteHub <- siteIdTable %>%
-# #           filter(region == input$hub)
-# #         siteHubTable <- siteIdTable %>%
-# #           filter(region == input$hub)
-# #         if(nrow(siteHubTable) > 0){
-# #           tableValues$siteHub <- siteHubTable %>%
-# #             select(one_of(fieldCodesSite))
-# #         } else {
-# #           tableValues$siteHub <- emptyDataFrame(fieldCodesSite)
-# #         }
-# #       }
-# #     }
+  observe({
+    tableValues$siteHub <- siteIdTable %>%
+      filter(region == input$hub)
+  })
+  
+  # Given a hub input, get vector of sites:
+  
+  siteChoices <- reactive({
+        sites <- c(
+          'noData', tableValues$siteHub %>%
+          arrange(siteID) %>%
+          .$siteID)
+    sites
+    })
+  
+  output$uiSite <- renderUI({
+        switch(input$inputType,
+               'New site' = textInput("siteId", "Site:", ''),
+               'Existing site' = selectInput("siteId", "Site:",
+                                             choices = siteChoices())
+        )
+  })
+  
+  # Once site is chosen above, have this be the default input:
+  
+    observe({
+      siteInputs <- c('siteContact','siteAddress','siteLocation', 'siteVisit',
+                      'siteCapture', 'siteForayEffort','siteForayCountUnbanded',
+                      'siteTechRs', 'sitePc', 'siteQuery')
+      for(i in 1:length(siteInputs)){
+        updateTextInput(session, siteInputs[i], value = input$siteId)
+      }
+    })
+    
+    # Once an observer has been recorded, have this be the default input:
+    
+    observe({
+      observerInputs <- c('observerCapture', 'observerForayEffort',
+                          'observerTechRs', 'observerPc')
+      for(i in 1:length(observerInputs)){
+        updateTextInput(session, observerInputs[i], value = input$observerVisit)
+      }
+    })
+    
+    # Once the date of visit has been recorded, have this be the default input:
+    
+    observe({
+      dateInputs <- c('dateCapture', 'dateForayEffort',
+                      'dateForayCountUnbanded','dateTechRs',
+                          'datePc')
+      for(i in 1:length(dateInputs)){
+        updateDateInput(session, dateInputs[i], value = input$dateVisit)
+      }
+    })
+  
+  # Set site inputs:
+#   output$moreControls <- renderUI({
+#     tagList(
+#       sliderInput("n", "N", 1, 1000, 500),
+#       textInput("label", "Label")
+#     )
 #   })
-#   
-#   # ContactInfo table filtered by site:
+  
+  # SiteId table filtered by hub:
+  
+  observe({
+    tableValues$siteHub <- siteIdTable %>%
+      filter(region == input$hub)
+  })
+  
+  # Query data filtered by hub:
+  
+  observe({
+    queryMongo <- mongo('queryTable', url = mongoURL)
+    tableValues$queryTable <- queryMongo$find(
+      query = hubQuery('region', input$hub)
+    )
+  })
+  
+  # ContactInfo table filtered by site:
 #   
 #   observe({
 #     if(!is.null(input$hub)){
@@ -540,30 +582,72 @@ server <- function(input, output, session) {
 #     shinyjs::show("thankyou_msgEnc")
 #   })
 #   
-#   #-------------------------------------------------------------------------------*
-#   # ---- SERVER: QUERY BANDING RECORDS ----
-#   #-------------------------------------------------------------------------------*
-#   # !!!This is temporary and will be replaced by the true encounter records once all files from previous years are added in the correct format!!!
-#   
-#   # Query encounters as a function of hub and site
-#   
-#   #   observe({
-#   #     if(!is.null(input$hub)){
-#   #       if(input$hub != '' & input$showAllSites == TRUE){
-#   #         queryMongoDf <- tableValues$enc %>%
-#   #           select(hub, site, date, speciesEnc, sex, bandNumber, colorCombo, encounterType) %>%
-#   #           rename(speciesQuery = speciesEnc,
-#   #                  sexQuery = sex,
-#   #                  bandNumberQuery = bandNumber,
-#   #                  colorComboQuery = colorCombo,
-#   #                  encounterTypeQuery = encounterType)
-#   #         updateSelectInput(session, 'speciesQuery', 
-#   #                           choices = queryMongoDf$species %>% unique %>% sort)
-#   #         tableValues$queryTable <- queryMongoDf
-#   #       }
-#   #     }
-#   #   })
-#   
+  #-------------------------------------------------------------------------------*
+  # ---- SERVER: QUERY BANDING RECORDS ----
+  #-------------------------------------------------------------------------------*
+  
+  queryTableBySite <- reactive({
+    if(!is.null(tableValues$queryTable)){
+      outTable <- tableValues$queryTable
+    }
+      if(input$showAllSites != TRUE){
+        outTable <- outTable %>% filter(siteID == input$siteQuery)
+      }
+      outTable
+  })
+  
+  output$uiQuerySppChoices <- renderUI({
+    selectInput("sppQuery", "",choices = queryTableBySite()$spp)
+  })
+  
+ queryTable <- reactive({
+   if(!is.null(queryTableBySite())){
+    queryOut <- queryTableBySite()
+    if(input$showAllSpp != TRUE) {
+      queryOut <- queryOut %>% filter(spp == input$sppQuery)
+    }
+    if(input$showAllSex != TRUE) {
+      queryOut <- queryOut %>% filter(sex == input$sexQuery)
+    }
+    if(input$showAllColorCombos != TRUE) {
+      queryOut <- queryOut %>%
+        filter(str_detect(colorCombo, input$colorComboQuery))
+    }
+    queryOut
+   }
+  })
+  
+#   observe({
+#     tableValues$queryTableOut <- queryTable()
+#   })
+  
+  output$queryTable <- DT::renderDataTable(
+    DT::datatable({
+      queryTable()
+    }, rownames = FALSE, selection = 'none')
+  )
+  
+  # !!!This is temporary and will be replaced by the true encounter records once all files from previous years are added in the correct format!!!
+  
+  # Query encounters as a function of hub and site
+  
+  #   observe({
+  #     if(!is.null(input$hub)){
+  #       if(input$hub != '' & input$showAllSites == TRUE){
+  #         queryMongoDf <- tableValues$enc %>%
+  #           select(hub, site, date, speciesEnc, sex, bandNumber, colorCombo, encounterType) %>%
+  #           rename(speciesQuery = speciesEnc,
+  #                  sexQuery = sex,
+  #                  bandNumberQuery = bandNumber,
+  #                  colorComboQuery = colorCombo,
+  #                  encounterTypeQuery = encounterType)
+  #         updateSelectInput(session, 'speciesQuery', 
+  #                           choices = queryMongoDf$species %>% unique %>% sort)
+  #         tableValues$queryTable <- queryMongoDf
+  #       }
+  #     }
+  #   })
+  
 #   encQuery <- reactive({
 #     if(!is.null(input$hub)){
 #       if(input$hub != ''){
@@ -590,13 +674,6 @@ server <- function(input, output, session) {
 #             encounters <- encounters %>%
 #               filter(str_detect(colorComboQuery, toupper(input$colorComboQuery)))
 #           }
-#           if(input$showAllBandNumber == 'FALSE'  & input$bandNumberQuery != ''){
-#             encounters <- encounters %>%
-#               filter(str_detect(bandNumberQuery, toupper(input$bandNumberQuery)))
-#           }
-#           if(input$showAllEncounterType == 'FALSE'  & input$encounterTypeQuery != ''){
-#             encounters <- encounters %>%
-#               filter(str_detect(toupper(encounterTypeQuery), toupper(input$encounterTypeQuery)))
 #           }
 #         }
 #       }
