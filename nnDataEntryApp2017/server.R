@@ -611,7 +611,7 @@ server <- function(input, output, session) {
     }
     if(input$showAllColorCombos != TRUE) {
       queryOut <- queryOut %>%
-        filter(str_detect(colorCombo, input$colorComboQuery))
+        filter(str_detect(colorCombo, toupper(input$colorComboQuery)))
     }
     queryOut
    }
@@ -627,82 +627,13 @@ server <- function(input, output, session) {
     }, rownames = FALSE, selection = 'none')
   )
   
-  # !!!This is temporary and will be replaced by the true encounter records once all files from previous years are added in the correct format!!!
-  
-  # Query encounters as a function of hub and site
-  
-  #   observe({
-  #     if(!is.null(input$hub)){
-  #       if(input$hub != '' & input$showAllSites == TRUE){
-  #         queryMongoDf <- tableValues$enc %>%
-  #           select(hub, site, date, speciesEnc, sex, bandNumber, colorCombo, encounterType) %>%
-  #           rename(speciesQuery = speciesEnc,
-  #                  sexQuery = sex,
-  #                  bandNumberQuery = bandNumber,
-  #                  colorComboQuery = colorCombo,
-  #                  encounterTypeQuery = encounterType)
-  #         updateSelectInput(session, 'speciesQuery', 
-  #                           choices = queryMongoDf$species %>% unique %>% sort)
-  #         tableValues$queryTable <- queryMongoDf
-  #       }
-  #     }
-  #   })
-  
-#   encQuery <- reactive({
-#     if(!is.null(input$hub)){
-#       if(input$hub != ''){
-#         encounters <- tableValues$enc %>%
-#           select(hub, site, date, speciesEnc, sex, bandNumber, colorCombo, encounterType) %>%
-#           rename(speciesQuery = speciesEnc,
-#                  sexQuery = sex,
-#                  bandNumberQuery = bandNumber,
-#                  colorComboQuery = colorCombo,
-#                  encounterTypeQuery = encounterType)
-#         if(input$showAllSites == FALSE){
-#           encounters <- filter(encounters, site == input$site)
-#         }
-#         if(!is.null(encounters)){
-#           if(input$showAllSpecies == 'FALSE'  & input$speciesQuery != ''){
-#             encounters <- encounters %>%
-#               filter(str_detect(speciesQuery, input$speciesQuery))
-#           }
-#           if(input$showAllSex == 'FALSE'  & input$sexQuery != ''){
-#             encounters <- encounters %>%
-#               filter(str_detect(sexQuery, toupper(input$sexQuery)))
-#           }
-#           if(input$showAllBandCombo == 'FALSE'  & input$colorComboQuery != ''){
-#             encounters <- encounters %>%
-#               filter(str_detect(colorComboQuery, toupper(input$colorComboQuery)))
-#           }
-#           }
-#         }
-#       }
-#       encounters
-#     }
-#   })
-#   
-#   observe({
-#     if(!is.null(input$hub)){
-#       if(input$hub != ''){
-#         updateSelectInput(session, 'speciesQuery', 
-#                           choices = tableValues$enc$species %>% unique %>% sort)
-#       }
-#     }
-#   })
-#   
-#   output$encounterTable <- DT::renderDataTable(
-#     DT::datatable({
-#       encQuery()
-#     }, rownames = FALSE, selection = 'none')
-#   )
-#   
-#   output$downloadData <- downloadHandler(
-#     filename = function() { str_c('encounterData-', input$site, '.csv') },
-#     content = function(file) {
-#       write.csv(encQuery(), file, row.names = FALSE)
-#     }
-#   )
-#   
+  output$downloadData <- downloadHandler(
+    filename = function() { str_c('captureHistory-', input$siteQuery, '.csv') },
+    content = function(file) {
+      write.csv(queryTable(), file, row.names = FALSE)
+    }
+  )
+
 #   #-------------------------------------------------------------------------------*
 #   # ---- SERVER: QUERY AOU names ----
 #   #-------------------------------------------------------------------------------*
