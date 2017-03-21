@@ -133,14 +133,21 @@ hubSiteQuery <- function(inHub, inSite){
   )
 }
 
+siteDateQuery <- function(siteField, inSite, dateField, inDate){
+  str_c('{',
+        shQuote(siteField, type = 'cmd'),
+        ':',
+        shQuote(inSite, type = 'cmd'),
+        ', ',
+        shQuote(dateField, type = 'cmd'),
+        ':',
+        shQuote(inDate, type = 'cmd'),
+        '}')
+}
+
 # Convert mongo data frame to a dplyr table dataframe
 
 mongoToTblDf <- function(data){
-  #   hubs <- unlist(unique(data$hub))
-  #   hubList <- vector('list', length = length(hubs))
-  #   for(i in 1:length(hubs)){
-  #     dataHubSubset <- data[data$hub == hubs[i],]
-  # for(i in 1:nrow(dataHubSubset)){
   if(nrow(data) > 0 & ncol(data) > 0){
     for(j in 1:ncol(data)){
       data[,j] <- as.character(data[,j])
@@ -149,9 +156,6 @@ mongoToTblDf <- function(data){
     data <- data %>% tbl_df
   }
   data
-  # hubList[[i]] <- dataHubSubset
-  # }
-  # bind_rows(hubList) %>% tbl_df
 }
 
 emptyDataFrame <- function(fieldCodes){
