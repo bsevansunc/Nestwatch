@@ -25,7 +25,7 @@ mongoURL <- "mongodb://bsevans:33shazam@ds025232.mlab.com:25232/nndataentry"
 
 # Vector of mongo tables:
 
-mongoNames <- c('contactTable', 'addressTable', 'siteLocationTable',
+mongoNames <- c('contactTable', 'addressTable', 'locationTable',
                 'visitTable','captureTable','forayEffortTable',
                 'forayCountUnbandedTable','techRsTable', 'pcTable')
 
@@ -42,3 +42,4 @@ for(i in 2:length(mongoNames)){
   # Add to mongo:
   mongoInsert(outData, mongoNames[i])
 }
+
