@@ -36,6 +36,8 @@ fieldNamesContactInfo <- fieldNamesSite <- c(
 
 fieldCodesAddress <- read.csv('startData/addressNames.csv')$names
 
+blankFieldsAddress <- fieldCodesAddress[-1]
+
 fieldNamesAddress <- fieldNamesSite <- c(
   'siteID', 'House number', 'Street', 'City', 'State',
   'Zip code', 'Location notes')
@@ -44,7 +46,10 @@ fieldNamesAddress <- fieldNamesSite <- c(
 # ---- LOCATION TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesLocation <- read.csv('startData/siteLocationNames.csv')$names
+
+fieldCodesLocation <- read.csv('startData/locationNames.csv')$names
+
+blankFieldsLocation <- fieldCodesLocation[-c(1,2)]
 
 fieldNamesLocation <- c('siteID', 'Date', 'Longitude', 'Latitude', 'Accuracy',
                         'Location method', 'Location notes')
@@ -61,6 +66,8 @@ choiceLocationMethod <- c('noData', 'GPS', 'map')
 #---------------------------------------------------------------------------------*
 
 fieldCodesVisit <- read.csv('startData/visitNames.csv')$names
+
+blankFieldsVisit <- fieldCodesVisit[-c(1,2)]
 
 fieldNamesVisit <- c('siteID', 'Date', 'Observer(s)', 'Participant engagement',
                      'Encountered birds', 'Net hours', 'Visit notes')
@@ -86,9 +93,11 @@ choiceEncounteredBirds <- c('noData', 'Yes', 'No')
 # ---- CAPTURE TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesCaptureTable <- read.csv('startData/captureNames.csv')$names
+fieldCodesCapture <- read.csv('startData/captureNames.csv')$names
 
-fieldNamesCaptureTable <- c(
+blankFieldsCapture <- fieldCodesCapture[-c(1,2,4)]
+
+fieldNamesCapture <- c(
   'siteID', 'Date', 'Time', 'Obs','ENC', 'SPP', 'Band #',
   'Color combo', 'Mass','Wing', 'Tail', 'Age', 'Sex', 'CP/BP', 'FAT',
   'Blood ID', 'Feather ID', 'Notes'
@@ -127,6 +136,8 @@ choiceFat <- c('noData', 0, 0.5, seq(1:5))
 
 fieldCodesForayEffort <- read.csv('startData/forayEffortNames.csv')$names
 
+blankFieldsForayEffort <- fieldCodesForayEffort[-c(1,2,3)]
+
 fieldNamesForayEffort <- c(
   'siteID', 'Date', 'Obs', 'Foray start', 'Foray end', 'Path distance (m)',
   'spp unbanded', 'Count unbanded'
@@ -140,6 +151,8 @@ choicePathDistance <- c('noData', 0:10000)
 
 fieldCodesForayCountUnbanded <- read.csv('startData/forayCountUnbandedNames.csv')$names
 
+blankFieldsForayCountUnbanded <- fieldCodesForayCountUnbanded[-c(1,2)]
+
 fieldNamesForayCountUnbanded <- c('siteID', 'Date', 'spp', 'Count')
 
 choiceCountUnbanded <- c('noData',  0:100)
@@ -149,6 +162,8 @@ choiceCountUnbanded <- c('noData',  0:100)
 #---------------------------------------------------------------------------------*
 
 fieldCodesTechRs <- read.csv('startData/techRsNames.csv')$names
+
+blankFieldsForayTechRs <- fieldCodesTechRs[-c(1,2,3)]
 
 fieldNamesTechRs <- c('siteID', 'Date', 'Obs', 'Time', 'Foray #', 'Band #',
                       'Longitude', 'Latitude', 'rsType', 'Notes')
@@ -160,6 +175,8 @@ choiceTypeRs <- c('noData', 'I', 'F', 'P')
 #---------------------------------------------------------------------------------*
 
 fieldCodesPc <- read.csv('startData/pcNames.csv')$names
+
+blankFieldsPc <- fieldCodesPc[-c(1:5)]
 
 fieldNamesPc <- c(
   'siteID','Date', 'Obs', 'Start time', 'Interval', 'SPP',
