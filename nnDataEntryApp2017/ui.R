@@ -13,6 +13,7 @@ shinyUI(
     ),
     tabPanel(strong('Visit record'),
       fluidPage(
+        useShinyjs(),
         fluidRow(
                column(3, selectInput('hub','Regional Hub:', choiceRegions)),
                column(3, selectInput('inputType', 'New or existing site:',
@@ -33,7 +34,7 @@ shinyUI(
     h4(strong('Site contact information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteContact', 'Site ID')),
+      column(3, textInput('siteIDContact', 'Site ID')),
       column(3, textInput('groupNameContact', 'Group name')),
       column(3, textInput('lastNameContact' ,'Last name')),
       column(3, textInput('firstNameContact', 'First name'))
@@ -51,7 +52,7 @@ shinyUI(
                                     'Add record to table',
                                     class = 'btn-primary'))),
     hr(),
-    # DT::dataTableOutput('responsesContact'),
+    DT::dataTableOutput('responsesContact'),
     br(),
     fluidRow(column(1, ''),
              column(4, actionButton('deleteContact',
@@ -62,12 +63,7 @@ shinyUI(
                                     'Submit contact data',
                                     class = 'btn-primary'))
     ),
-    br(), shinyjs::hidden(
-      div(
-        id = 'thankyou_msgContact',
-        h3('Thanks, your contact data have been recorded!')
-      )
-    ),
+    br(),
     br(),
     hr(),
     #--------------------------------------------------------------------*
@@ -76,7 +72,7 @@ shinyUI(
     h4(strong('Site address information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteAddress', 'Site ID')),
+      column(3, textInput('siteIDAddress', 'Site ID')),
       column(2, textInput('houseNumberAddress', 'House number')),
       column(2, textInput('streetAddress' ,'Street')),
       column(2, textInput('cityAddress', 'City')),
@@ -94,7 +90,7 @@ shinyUI(
                                     'Add record to table',
                                     class = 'btn-primary'))),
     hr(),
-    # DT::dataTableOutput('responsesAddress'),
+    DT::dataTableOutput('responsesAddress'),
     br(),
     fluidRow(column(1, ''),
              column(4, actionButton('deleteAddress',
@@ -105,12 +101,7 @@ shinyUI(
                                     'Submit address data',
                                     class = 'btn-primary'))
     ),
-    br(), shinyjs::hidden(
-      div(
-        id = 'thankyou_msgAddress',
-        h3('Thanks, your address data have been recorded!')
-      )
-    ),
+    br(),
     br(),
     hr(),
     #--------------------------------------------------------------------*
@@ -119,7 +110,7 @@ shinyUI(
     h4(strong('Site location information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteLocation', 'Site ID')),
+      column(3, textInput('siteIDLocation', 'Site ID')),
       column(2, dateInput('dateLocation', 'Date')),
       column(2, numericInput('longLocation' ,'Longitude', NA)),
       column(2, numericInput('latLocation', 'Latitude', NA)),
@@ -138,7 +129,7 @@ shinyUI(
                                     'Add record to table',
                                     class = 'btn-primary'))),
     hr(),
-    # DT::dataTableOutput('responsesLocation'),
+    DT::dataTableOutput('responsesLocation'),
     br(),
     fluidRow(column(1, ''),
              column(4, actionButton('deleteLocation',
@@ -149,12 +140,7 @@ shinyUI(
                                     'Submit location data',
                                     class = 'btn-primary'))
     ),
-    br(), shinyjs::hidden(
-      div(
-        id = 'thankyou_msgLocation',
-        h3('Thanks, your location data have been recorded!')
-      )
-    ),
+    br(), 
     br(),
     hr(),
     #--------------------------------------------------------------------*
@@ -163,7 +149,7 @@ shinyUI(
     h4(strong('Site visit information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteVisit', 'Site ID')),
+      column(3, textInput('siteIDVisit', 'Site ID')),
       column(2, dateInput('dateVisit', 'Date')),
       column(2, textInput('observerVisit' ,'Observer(s)')),
       column(5, selectizeInput('participantEngagementVisit',
@@ -196,7 +182,7 @@ shinyUI(
                                     'Add record to table',
                                     class = 'btn-primary'))),
     hr(),
-    # DT::dataTableOutput('responsesVisit'),
+    DT::dataTableOutput('responsesVisit'),
     br(),
     fluidRow(column(1, ''),
              column(4, actionButton('deleteVisit',
@@ -207,12 +193,7 @@ shinyUI(
                                     'Submit visit data',
                                     class = 'btn-primary'))
     ),
-    br(), shinyjs::hidden(
-      div(
-        id = 'thankyou_msgVisit',
-        h3('Thanks, your visit data have been recorded!')
-      )
-    ),
+    br(), 
     br(),
     hr(),
     #--------------------------------------------------------------------*
@@ -220,7 +201,7 @@ shinyUI(
     #--------------------------------------------------------------------*
     br(),
     fluidRow(
-      column(3, textInput('siteCapture', 'Site ID')),
+      column(3, textInput('siteIDCapture', 'Site ID')),
       column(3, textInput('dateCapture', 'Date')),
       column(6, '')
     ),
@@ -257,7 +238,7 @@ shinyUI(
                                     'Add record to table',
                                     class = 'btn-primary'))),
     hr(),
-    # DT::dataTableOutput('responsesCapture'),
+    DT::dataTableOutput('responsesCapture'),
     br(),
     fluidRow(column(1, ''),
              column(4, actionButton('deleteCapture',
@@ -268,20 +249,15 @@ shinyUI(
                                     'Submit capture data',
                                     class = 'btn-primary'))
     ),
-    br(), shinyjs::hidden(
-      div(
-        id = 'thankyou_msgCapture',
-        h3('Thanks, your capture data have been recorded!')
-      )
-    ),
+    br(),
     br(),
     hr(),
     #--------------------------------------------------------------------*
-    # ---- Resight foray time and distance table ----
+    # ---- Resight foray effort table ----
     #--------------------------------------------------------------------*
     br(),
     fluidRow(
-      column(3, textInput('siteForayEffort', 'Site ID')),
+      column(3, textInput('siteIDForayEffort', 'Site ID')),
       column(3, textInput('dateForayEffort', 'Date')),
       column(6, '')
     ),
@@ -302,23 +278,18 @@ shinyUI(
                                     'Add record to table',
                                     class = 'btn-primary'))),
     hr(),
-    # DT::dataTableOutput('responsesForayTimeEffort'),
+    DT::dataTableOutput('responsesForayEffort'),
     br(),
     fluidRow(column(1, ''),
              column(4, actionButton('deleteForayEffort',
                                     'Delete record from table', 
                                     class = 'btn-primary')),
              column(3, ' '),
-             column(4, actionButton('submitForayForayEffort', 
+             column(4, actionButton('submitForayEffort', 
                                     'Submit foray time and distance data',
                                     class = 'btn-primary'))
     ),
-    br(), shinyjs::hidden(
-      div(
-        id = 'thankyou_msgForayEffort',
-        h3('Thanks, your foray time and distance data have been recorded!')
-      )
-    ),
+    br(), 
     br(),
     hr(),
     #--------------------------------------------------------------------*
@@ -326,7 +297,7 @@ shinyUI(
     #--------------------------------------------------------------------*
     br(),
     fluidRow(
-      column(3, textInput('siteForayCountUnbanded', 'Site ID')),
+      column(3, textInput('siteIDForayCountUnbanded', 'Site ID')),
       column(3, textInput('dateForayCountUnbanded', 'Date')),
       column(2, selectizeInput('sppForayCountUnbanded', 'Species',
                                choices = choiceSpecies)),
@@ -363,7 +334,7 @@ shinyUI(
     #--------------------------------------------------------------------*
     br(),
     fluidRow(
-      column(3, textInput('siteTechRs', 'Site ID')),
+      column(3, textInput('siteIDTechRs', 'Site ID')),
       column(3, textInput('dateTechRs', 'Date')),
       column(6, '')
     ),
@@ -411,7 +382,7 @@ shinyUI(
     #--------------------------------------------------------------------*
     br(),
     fluidRow(
-      column(3, textInput('sitePc', 'Site ID')),
+      column(3, textInput('siteIDPc', 'Site ID')),
       column(3, textInput('datePc', 'Date')),
       column(1, textInput('observerPc', 'Observer')),
       column(2, selectizeInput('startTimePc', 'Start time',
@@ -468,7 +439,7 @@ shinyUI(
                                            'Show all',
                                            value = TRUE))),
                  fluidRow(
-                   column(10, textInput('siteQuery', '')),
+                   column(10, textInput('siteIDQuery', '')),
                    column(2, '')),
                  hr(),
                  fluidRow(
