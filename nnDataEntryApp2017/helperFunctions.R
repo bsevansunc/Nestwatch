@@ -30,19 +30,19 @@ getTableMetadata <- function(fieldCodes, fieldNames) {
   return (result)
 }
 
-# Function takes values of inputs, if there are any, and puts them in a 1-row data frame:
-
-castData <- function(fieldValues){
-  return(data.frame(t(as.list(fieldValues)),
-                    stringsAsFactors = FALSE))
-}
-
 # Make some submissions blank:
 
 createBlankInputs <- function(fieldCodes, session){
   for(i in 1:length(fieldCodes)){
     updateTextInput(session, fieldCodes[i], value = '')
   }
+}
+
+# Function takes values of inputs, if there are any, and puts them in a 1-row data frame:
+
+castData <- function(fieldValues){
+  return(data.frame(t(as.list(fieldValues)),
+                    stringsAsFactors = FALSE))
 }
 
 # Adding or modifying records:
@@ -111,7 +111,6 @@ siteQuery <- function(siteField, inSite){
         ':',
         shQuote(inSite, type = 'cmd'),
         '}')
-  # ', "_id" : 0}')
 }
 
 # Query mongo by hub:
@@ -151,7 +150,6 @@ mongoToTblDf <- function(data){
   if(nrow(data) > 0 & ncol(data) > 0){
     for(j in 1:ncol(data)){
       data[,j] <- as.character(data[,j])
-      # }
     }
     data <- data %>% tbl_df
   }
@@ -164,8 +162,6 @@ emptyDataFrame <- function(fieldCodes){
     data.frame %>%
     setNames(fieldCodes)
 }
-
-# exampleFrame <- data.frame(hub = c('a', 'b'), obs1 = c(1,2), obs2 = c(2,1))
 
 # here's what i'm thinking ... data where there is a null value for a given field eliminates the field ... perhaps this should be come a table data frame after bind it with a data frame that's blank but defined by the proper fields.
 
