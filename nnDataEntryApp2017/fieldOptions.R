@@ -20,7 +20,11 @@ names(choiceRegions) <- choiceRegions
 # ---- CONTACT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesContactInfo <- read.csv('startData/contactNames.csv')$names
+fieldCodesContactInfo <- readTbl('startData/contactNames.csv') %>%
+  # mutate(names = str_replace_all(names, 'Contact', '')) %>%
+  .$names
+
+blankFieldsContactInfo <- fieldCodesContactInfo[-1]
 
 fieldNamesContactInfo <- fieldNamesSite <- c(
   'siteID', 'School or group name', 'Last name', 'First name', 'Primary phone',
@@ -134,8 +138,9 @@ choicePathDistance <- c('noData', 0:10000)
 # ---- RESIGHT FORAY COUNT UNBANDED TABLE ----
 #---------------------------------------------------------------------------------*
 
-forayCountUnbandedNames <- read.csv('startData/forayCountUnbandedNames.csv')$names
+fieldCodesForayCountUnbanded <- read.csv('startData/forayCountUnbandedNames.csv')$names
 
+fieldNamesForayCountUnbanded <- c('siteID', 'Date', 'spp', 'Count')
 
 choiceCountUnbanded <- c('noData',  0:100)
 
@@ -143,11 +148,12 @@ choiceCountUnbanded <- c('noData',  0:100)
 # ---- RESIGHT TECHNICIAN TABLE ----
 #---------------------------------------------------------------------------------*
 
-techRsNames <- read.csv('startData/techRsNames.csv')$names
+fieldCodesTechRs <- read.csv('startData/techRsNames.csv')$names
 
-choiceTypeRs <- c('noData', 'I', 'F')
+fieldNamesTechRs <- c('siteID', 'Date', 'Obs', 'Time', 'Foray #', 'Band #',
+                      'Longitude', 'Latitude', 'rsType', 'Notes')
 
-
+choiceTypeRs <- c('noData', 'I', 'F', 'P')
 
 #---------------------------------------------------------------------------------*
 # ---- POINT COUNTS ----
