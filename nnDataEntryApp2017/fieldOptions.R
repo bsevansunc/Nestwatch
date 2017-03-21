@@ -46,7 +46,6 @@ fieldNamesAddress <- fieldNamesSite <- c(
 # ---- LOCATION TABLE ----
 #---------------------------------------------------------------------------------*
 
-
 fieldCodesLocation <- read.csv('startData/locationNames.csv')$names
 
 blankFieldsLocation <- fieldCodesLocation[-c(1,2)]
@@ -54,7 +53,7 @@ blankFieldsLocation <- fieldCodesLocation[-c(1,2)]
 fieldNamesLocation <- c('siteID', 'Date', 'Longitude', 'Latitude', 'Accuracy',
                         'Location method', 'Location notes')
 
-choiceDate <- c('noData', seq(
+choiceDate <- c('1999-09-09', seq(
   as.Date(ISOdate(2000, 1, 15)),
   as.Date(ISOdate(2030, 1, 1)), 1) %>%
     as.character)
@@ -72,7 +71,7 @@ blankFieldsVisit <- fieldCodesVisit[-c(1,2)]
 fieldNamesVisit <- c('siteID', 'Date', 'Observer(s)', 'Participant engagement',
                      'Encountered birds', 'Net hours', 'Visit notes')
 
-choiceNetMinutes <- c('noData', 0:2000)
+choiceNetMinutes <- c(99999, 0:2000)
 
 choiceParticipantEngagement <- c('noData', '-', 0:5)
 
@@ -87,7 +86,7 @@ names(choiceParticipantEngagement) <- c(
   'Participant contributed during all visit activities'
 )
 
-choiceEncounteredBirds <- c('noData', 'Yes', 'No')
+choiceEncounteredBirds <- c('noData', 'Y', 'N')
 
 #---------------------------------------------------------------------------------*
 # ---- CAPTURE TABLE ----
@@ -112,7 +111,7 @@ timeOfDay <- data.frame(
   slice(301:1321) %>%
   .$time
 
-choiceTimeOfDay <- c('noData',timeOfDay)
+choiceTimeOfDay <- c('00:01',timeOfDay)
 
 choiceEnc <- c('noData','R', 'B')
 
@@ -122,9 +121,9 @@ colorValues <- c('B', 'N', 'K', 'G', 'E', 'O', 'P', 'M', 'R', 'Y', 'W')
 
 choiceColors <- getAllPossibleCombos(colorValues)
 
-choiceAge <- c('noData', 'HY', 'AHY', 'SY', 'ASY', 'UNK')
+choiceAge <- c('noData', 'HY', 'AHY', 'SY', 'ASY', 'U')
 
-choiceSex <- c('noData', 'M', 'F', 'UNK')
+choiceSex <- c('noData', 'M', 'F', 'U')
 
 choiceBreedingCond <-  c('noData','CP', 'BP')
 
@@ -139,11 +138,10 @@ fieldCodesForayEffort <- read.csv('startData/forayEffortNames.csv')$names
 blankFieldsForayEffort <- fieldCodesForayEffort[-c(1,2,3)]
 
 fieldNamesForayEffort <- c(
-  'siteID', 'Date', 'Obs', 'Foray start', 'Foray end', 'Path distance (m)',
-  'spp unbanded', 'Count unbanded'
+  'siteID', 'Date', 'Obs','Foray #', 'Foray start', 'Foray end', 'Path distance (m)'
 )
 
-choicePathDistance <- c('noData', 0:10000)
+choicePathDistance <- c(99999, 0:10000)
 
 #---------------------------------------------------------------------------------*
 # ---- RESIGHT FORAY COUNT UNBANDED TABLE ----
