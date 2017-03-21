@@ -2,41 +2,43 @@
 
 readTbl <- function(x) read.csv(x) %>% tbl_df
 
-# Migrate data to mongo:
+# Function to put data in mongo
 
-readTbl('startData/addressTable.csv')
+mongoInsert <- function(inTable, mongoTable){
+  connectionMongo <- mongo(mongoTable, url = mongoURL)
+  connectionMongo$insert(inTable)
+}
 
-readTbl('startData/birdTable.csv')
+# Function to turn NA to 'noData'
 
-readTbl('startData/contactTable.csv')
+naToNoData <- function(x) ifelse(is.na(x), 'noData', x)
 
-readTbl('startData/forayCountUnbandedTable.csv')
+# Function to change names to those of the field codes:
 
-readTbl('startData/forayEffortTable.csv')
+namesToFieldCodes <- function(inData, fieldCodes){
+  data <- readTbl(inData)
+  names(data) <- fieldCodes
+  return(data)
+}
 
-readTbl('startData/pcTable.csv')
+mongoURL <- "mongodb://bsevans:33shazam@ds025232.mlab.com:25232/nndataentry"
 
-readTbl('startData/queryTable.csv')
+# Vector of mongo tables:
 
-readTbl('startData/siteIdTable.csv')
+mongoNames <- c('contactTable', 'addressTable', 'siteLocationTable',
+                'visitTable','captureTable','forayEffortTable',
+                'forayCountUnbandedTable','techRsTable', 'pcTable')
 
-readTbl('startData/siteLocationTable.csv')
-
-readTbl('startData/techRsTable.csv')
-
-readTbl('startData/visitTable.csv')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+for(i in 2:length(mongoNames)){
+  inData <- paste0('startData/', mongoNames[i], '.csv')
+  outName <- mongoNames[i] %>% str_replace('Table', '')
+  namesVector <- paste0(
+    'startData/', str_replace(mongoNames[i],'Table', ''),'Names.csv') %>%
+    readTbl %>% .$names
+  # Read, change NA to noData, and set field names:
+  outData <- readTbl(inData) %>%
+    mutate_all(.funs = naToNoData)
+  names(outData) <- namesVector
+  # Add to mongo:
+  mongoInsert(outData, mongoNames[i])
+}
