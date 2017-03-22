@@ -119,7 +119,7 @@ choiceSpecies <- c('noData',aouCodes$Alpha)
 
 colorValues <- c('B', 'N', 'K', 'G', 'E', 'O', 'P', 'M', 'R', 'Y', 'W')
 
-choiceColors <- getAllPossibleCombos(colorValues)
+choiceColors <- c('noData', getAllPossibleCombos(colorValues))
 
 choiceAge <- c('noData', 'HY', 'AHY', 'SY', 'ASY', 'U')
 
@@ -153,7 +153,7 @@ blankFieldsForayCountUnbanded <- fieldCodesForayCountUnbanded[-c(1,2)]
 
 fieldNamesForayCountUnbanded <- c('siteID', 'Date', 'spp', 'Count')
 
-choiceCountUnbanded <- c('noData',  0:100)
+choiceCountUnbanded <- c(99999,  0:100)
 
 #---------------------------------------------------------------------------------*
 # ---- RESIGHT TECHNICIAN TABLE ----
@@ -166,7 +166,7 @@ blankFieldsTechRs <- fieldCodesTechRs[-c(1,2)]
 fieldNamesTechRs <- c('siteID', 'Date', 'Obs', 'Time', 'Foray #', 'Band #',
                       'Longitude', 'Latitude', 'rsType', 'Notes')
 
-choiceTypeRs <- c('noData', 'I', 'F', 'P')
+choiceTypeTechRs <- c('noData', 'I', 'F', 'P')
 
 #---------------------------------------------------------------------------------*
 # ---- POINT COUNTS ----
