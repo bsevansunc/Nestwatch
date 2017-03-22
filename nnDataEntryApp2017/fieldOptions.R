@@ -178,7 +178,8 @@ blankFieldsPc <- fieldCodesPc[-c(1:5)]
 
 fieldNamesPc <- c(
   'siteID','Date', 'Obs', 'Start time', 'Interval', 'SPP',
-  'D0-10', 'D10-20', 'D20-30', 'D30-40', 'D40-50'
+  'D0-10', 'D10-20', 'D20-30', 'D30-40', 'D40-50',
+  'Detection'
 )
 
 choiceInterval <- c('noData', 1:3)
