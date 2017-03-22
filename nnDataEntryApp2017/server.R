@@ -1044,17 +1044,17 @@ server <- function(input, output, session) {
 #     }
 #   })
 #   
-#   # Net hours calculator:
-#   
-#   observe({
-#     totalMinutes <- sum(
-#       input$netMinutes6,
-#       input$netMinutes9*1.5,
-#       input$netMinutes12 * 2,
-#       input$netMinutes18*3)
-#     updateNumericInput(session, 'netHours',
-#                        value = round(totalMinutes/60,1))
-#   })
+  # Net hours calculator:
+  
+  observe({
+    totalMinutes <- sum(
+      input$netMinutes6Visit,
+      input$netMinutes9Visit*1.5,
+      input$netMinutes12Visit * 2,
+      input$netMinutes18Visit*3)
+    updateNumericInput(session, 'netHoursVisit',
+                       value = round(totalMinutes/60,1))
+  })
 #   
 #   # Once species has been written on the encounter page, have this be the default entry for the query:
 #   
