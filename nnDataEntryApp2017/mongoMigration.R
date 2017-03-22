@@ -16,7 +16,18 @@ mongoRemove <- function(mongoTable){
 
 # Function to turn NA to 'noData'
 
-naToNoData <- function(x) ifelse(is.na(x), 'noData', x)
+naToNoData <- function(x){
+  x <- ifelse(is.na(x) & !is.numeric(x), 'noData', x)
+  x <- ifelse(is.na(x) & is.numeric(x), -99999, x)
+  return(x)
+}
+
+# Function to fix time (adds a zero if it's the morning):
+
+fixTime <- function(x){
+  ifelse(str_detect(x, ':') & str_count(x) == 4,
+         paste0(0, x), x)
+}
 
 # Function to change names to those of the field codes:
 
@@ -42,7 +53,9 @@ for(i in 1:length(mongoNames)){
     readTbl %>% .$names
   # Read, change NA to noData, and set field names:
   outData <- readTbl(inData) %>%
-    mutate_all(.funs = naToNoData)
+    mutate_all(.funs = naToNoData) %>%
+    mutate_all(.funs = fixTime) %>%
+    distinct
   names(outData) <- namesVector
   # Add to mongo:
   mongoRemove(mongoNames[i])
