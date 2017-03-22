@@ -1,6 +1,12 @@
 # USER INTERFACE
 
 library(shiny)
+library(readr)
+library(mongolite)
+library(tidyr)
+library(dplyr)
+library(lubridate)
+library(shinyjs)
 library(DT)
 
 source('setUp.R', local=TRUE)

@@ -2,6 +2,16 @@
 # ---- SET-UP ----
 #=================================================================================*
 
+library(shiny)
+library(stringr)
+library(readr)
+library(mongolite)
+library(tidyr)
+library(dplyr)
+library(lubridate)
+library(shinyjs)
+library(DT)
+
 # Sources used:
 
 # Form input: http://deanattali.com/2015/06/14/mimicking-google-form-shiny/

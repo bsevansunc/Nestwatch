@@ -5,12 +5,16 @@
 # setwd('/Users/bsevans/Dropbox/nnDataEntryApp')
 
 source('setUp.R', local=TRUE)
+
+library(shiny)
+library(stringr)
 library(readr)
 library(mongolite)
 library(tidyr)
 library(dplyr)
 library(lubridate)
 library(shinyjs)
+library(DT)
 
 mongoURL <- 'mongodb://bsevans:33shazam@ds025232.mlab.com:25232/nndataentry'
 
@@ -37,19 +41,19 @@ server <- function(input, output, session) {
   # Given a hub input, get vector of sites:
   
   siteChoices <- reactive({
-        sites <- c(
-          'noData', tableValues$siteHub %>%
-          arrange(siteID) %>%
-          .$siteID)
+    sites <- c(
+      'noData', tableValues$siteHub %>%
+        arrange(siteID) %>%
+        .$siteID)
     sites
-    })
+  })
   
   output$uiSite <- renderUI({
-        switch(input$inputType,
-               'New site' = textInput("siteId", "Site:", ''),
-               'Existing site' = selectInput("siteId", "Site:",
-                                             choices = siteChoices())
-        )
+    switch(input$inputType,
+           'New site' = textInput("siteId", "Site:", ''),
+           'Existing site' = selectInput("siteId", "Site:",
+                                         choices = siteChoices())
+    )
   })
   
   # Once site is chosen above, have this be the default input:
@@ -62,7 +66,7 @@ server <- function(input, output, session) {
       updateTextInput(session, siteInputs[i], value = input$siteId)
     }
   })
-    
+  
   # Once an observer has been recorded, have this be the default input:
   
   observe({
@@ -336,6 +340,7 @@ server <- function(input, output, session) {
     mongoLocation$insert(tableValues$location)
     shinyjs::alert('Thank you, your location data have been submitted!')
   })
+  
   #--------------------------------------------------------------------*
   # Visit table filtered by site and date:
   #--------------------------------------------------------------------*
@@ -418,6 +423,7 @@ server <- function(input, output, session) {
     mongoVisit$insert(tableValues$visit)
     shinyjs::alert('Thank you, your visit data have been submitted!')
   })
+  
   #--------------------------------------------------------------------*
   # Capture table filtered by site:
   #--------------------------------------------------------------------*
@@ -839,212 +845,9 @@ server <- function(input, output, session) {
     datatable(aouCodes, filter = 'none', rownames = FALSE,
               options = list(pageLength = 3)))
   
-  
-######################################################################################
-######################################################################################
-#   # When "clear inputs" is pressed, make some inputs blank:
-#   
-#   observeEvent(input$newContact, {
-#     createBlankInputs(blankFieldsContactInfo, session)
-#   })
-  
- 
-
-  #   
-  #   # Save data:
-  #   
-  #   observeEvent(input$submitPcData, {
-  #     mongoPc <- mongo('pointCount_data', url = mongoURL)
-  #     # Remove data associated with site from database:
-  #     mongoPc$remove(siteQuery('site', input$site), multiple = TRUE)
-  #     # Add data to database:
-  #     mongoPc$insert(tableValues$pcTable)
-  #     shinyjs::show("thankyou_msgPc")
-  #   })
-  #   
-  
-#   # Address table filtered by site:
-#   
-#   observe({
-#     if(!is.null(input$hub)){
-#       if(input$hub != 'noData'){
-#         addressMongo <- mongo('addressTable', url = mongoURL)
-#         addressTable <- addressMongo$find(
-#           query = siteQuery('siteId', input$siteId),
-#           fields = '{"_row" : 0, "_id" : 0}') %>%
-#           mongoToTblDf
-#         if(nrow(addressTable) > 0){
-#           tableValues$address <- addressTable %>%
-#             select(one_of(fieldCodesAddress))
-#         } else {
-#           tableValues$address <- emptyDataFrame(fieldCodesAddress)
-#         }
-#       }
-#     }
-#   })
-#   
-############################################################################## 
-#   
-#   # Visit data filtered by site:
-#   
-#   observe({
-#     if(!is.null(input$site)){
-#       if(input$site != ''){
-#         visitMongo <- mongo('visit_data', url = mongoURL)
-#         visitTable <- visitMongo$find(
-#           query = hubQuery('hub', input$hub),
-#           fields = '{"_row" : 0, "_id" : 0}') %>%
-#           mongoToTblDf %>%
-#           filter(site == input$site)
-#         if(nrow(visitTable) > 0){
-#           tableValues$visit <- visitTable %>%
-#             select(one_of(fieldCodesVisit))
-#         } else {
-#           tableValues$visit <- emptyDataFrame(fieldCodesVisit)
-#         }
-#       }
-#     }
-#   })
-#   
-#   # Encounter data filtered by hub:
-#   
-#   observe({
-#     if(!is.null(input$hub)){
-#       if(input$hub != ''){
-#         encMongo <- mongo('encounter_data', url = mongoURL)
-#         encTable <- encMongo$find(
-#           query = hubQuery('hub', input$hub),
-#           fields = '{"_row" : 0, "_id" : 0}') %>%
-#           mongoToTblDf
-#         if(nrow(encTable) > 0){
-#           tableValues$enc <- encTable %>%
-#             select(one_of(fieldCodesEnc))
-#         } else {
-#           tableValues$enc <- emptyDataFrame(fieldCodesEnc)
-#         }
-#       }
-#     }
-#   })
-#   
-#   # Point count data filtered by site:
-#   
-#   observe({
-#     if(!is.null(input$site)){
-#       if(input$site != ''){
-#         pcMongo <- mongo('pointCount_data', url = mongoURL)
-#         pcTable <- pcMongo$find(
-#           query = hubQuery('hub', input$hub),
-#           fields = '{"_row" : 0, "_id" : 0}') %>%
-#           mongoToTblDf %>%
-#           filter(site == input$site)
-#         if(nrow(pcTable) > 0){
-#           tableValues$pointCount <- pcTable %>%
-#             select(one_of(fieldCodesPc))
-#         } else {
-#           tableValues$pointCount <- emptyDataFrame(fieldCodesPc)
-#         }
-#       }
-#     }
-#   })
-#   
-#   # Nest summary data filtered by site:
-#   
-#   observe({
-#     if(!is.null(input$site)){
-#       if(input$site != ''){
-#         nestSummaryMongo <- mongo('nest_summary_data', url = mongoURL)
-#         nestSummaryTable <- nestSummaryMongo$find(
-#           query = hubQuery('hub', input$hub),
-#           fields = '{"_row" : 0, "_id" : 0}') %>%
-#           mongoToTblDf %>%
-#           filter(site == input$site)
-#         if(nrow(nestSummaryTable) > 0){
-#           tableValues$nestSummary <- nestSummaryTable %>%
-#             select(one_of(fieldCodesNestSummary))
-#         } else {
-#           tableValues$nestSummary <- emptyDataFrame(fieldCodesNestSummary)
-#         }
-#       }
-#     }
-#   })
-#   
-#   # Nest observation data filtered by site:
-#   
-#   observe({
-#     if(!is.null(input$site)){
-#       if(input$site != ''){
-#         nestMongo <- mongo('nest_observation_data', url = mongoURL)
-#         nestTable <- nestMongo$find(
-#           query = hubQuery('hub', input$hub),
-#           fields = '{"_row" : 0, "_id" : 0}') %>%
-#           mongoToTblDf %>%
-#           filter(site == input$site)
-#         if(nrow(nestTable) > 0){
-#           tableValues$nest <- nestTable %>%
-#             select(one_of(fieldCodesNest))
-#         } else {
-#           tableValues$nest <- emptyDataFrame(fieldCodesNest)
-#         }
-#       }
-#     }
-#   })
-#   
-#   #-------------------------------------------------------------------------------*
-#   # ---- SERVER: REACTIVE INPUTS ----
-#   #-------------------------------------------------------------------------------*
-
-  # Given a hub input, get vector of sites:
-
-  # siteChoices <- reactive({
-#     if(input$hub != 'noData'){
-#       sites <- c('noData', tableValues$siteHub %>%
-#         arrange(siteID) %>%
-#         .$siteID
-#       )
-#     } else {
-#     sites<- c('noData')
-#     }
-#     sites
-#     sites <- ''
-#     if(!is.null(input$hub)){
-#       if(input$hub != ''){
-#         sites <- tableValues$siteHub %>%
-#           arrange(site) %>%
-#           .$site
-#       }
-#     }
-#     c('', sites)
-#   })
-
-  # If it is a new site, type it in, otherwise retrieve vector of sites:
-
-#   output$uiSite <- renderUI({
-#     tagList(
-#       textInput('siteId', 'Site')
-#     )
-#   })
-    
-#     if (is.null(input$inputType))
-#       return()
-#     switch(input$inputType,
-           # 'New site' = textInput("siteId", "Site:", ''),
-#            'Existing site' = selectInput("siteId", "Site:",
-#                                          choices = siteChoices())
-    # )
-  # })
-
-  # selectedSite <- reactive(input$site)
-#   
-#   # Once OBSERVERS are written on the visit page, have this be the default entry:
-#   
-#   observe({
-#     observerInputs <- c('observerEnc', 'observerPc')
-#     for(i in 1:length(observerInputs)){
-#       updateTextInput(session, observerInputs[i], value = input$observer)
-#     }
-#   })
-#   
-  # Net hours calculator:
+  #-------------------------------------------------------------------------------*
+  # ---- NET HOURS CALCULATOR ----
+  #-------------------------------------------------------------------------------*
   
   observe({
     totalMinutes <- sum(
@@ -1055,269 +858,7 @@ server <- function(input, output, session) {
     updateNumericInput(session, 'netHoursVisit',
                        value = round(totalMinutes/60,1))
   })
-#   
-#   # Once species has been written on the encounter page, have this be the default entry for the query:
-#   
-#   observe({
-#     inSpecies <- input$speciesEnc
-#     print(inSpecies)
-#     if(is.null(inSpecies) | inSpecies == '')
-#       return(NULL)
-#     updateTextInput(session, 'speciesQuery', value = input$speciesEnc)
-#   })
-#   
-#   # Once sex has been written on the encounter page, have this be the default entry for the query:
-#   
-#   observe({
-#     inSex <- input$sex
-#     print(inSex)
-#     if(is.null(inSex) | inSex == '')
-#       return(NULL)
-#     updateTextInput(session, 'sexQuery', value = input$sex)
-#   })
-#   
-#   # Once bandCombo has been written on the encounter page, have this be the default entry for query:
-#   
-#   observe({
-#     inCombo <- input$colorCombo
-#     print(inCombo)
-#     if(is.null(inCombo)| inCombo == '')
-#       return(NULL)
-#     updateTextInput(session, 'bandComboQuery', value = input$colorCombo)
-#   })
-#   
-#   #-------------------------------------------------------------------------------*
-#   # ---- SUBMIT SITE DATA ----
-#   #-------------------------------------------------------------------------------*
-#   # Input fields:
-#   
-#   formDataSite <- reactive({
-#     sapply(names(getTableMetadata(fieldCodesSite, fieldNamesSite)$fields),
-#            function(x) as.character(input[[x]]))
-#   })
-#   
-#   # Read data associated with site into reactive values container:
-#   
-#   observe({
-#     if(!is.null(input$site)){
-#       if(input$site != ''){
-#         siteTable <- tableValues$siteHub %>%
-#           filter(site == input$site)
-#         if(nrow(siteTable) > 0){
-#           tableValues$site <- siteTable %>%
-#             select(one_of(fieldCodesSite))
-#         } else {
-#           tableValues$site <- emptyDataFrame(fieldCodesSite)
-#         }
-#       }
-#     }
-#   })
-#   
-#   # Add or modify records:
-#   
-#   observeEvent(input$submitSite, {
-#     tableValues$site <- dataAddOrModify(
-#       tableValues$site,
-#       input$responsesSite_rows_selected, 
-#       formDataSite())
-#   }, priority = 1)
-#   
-#   # Select row in table to show details in inputs:
-#   
-#   observeEvent(input$responsesSite_rows_selected, {
-#     showRecordInputs(tableValues$site, input$responsesSite_rows_selected,
-#                      fieldCodesSite, session)
-#   })
-#   
-#   # Delete selected record:
-#   
-#   observeEvent(input$deleteSite, {
-#     tableValues$site <- deleteRecord(
-#       tableValues$site,
-#       input$responsesSite_rows_selected)
-#   }, priority = 1)
-#   
-#   # Data table output:
-#   
-#   output$responsesSite <- DT::renderDataTable({
-#     # Update after submit or delete is clicked
-#     input$submitSite ; input$deleteSite
-#     # Table display:
-#     tableValues$site
-#   }, options = list(lengthChange = FALSE, paging = FALSE, columns.defaultContent = ''),
-#   server = FALSE, selection = "single",
-#   colnames = unname(getTableMetadata(fieldCodesSite, fieldNamesSite)$fields))
-#   
-#   # Save data:
-#   
-#   observeEvent(input$submitSiteData, {
-#     mongoSite <- mongo('site_data', url = mongoURL)
-#     # Remove data associated with site from database:
-#     mongoSite$remove(siteQuery('site', input$site), multiple = TRUE)
-#     # Add data to database:
-#     mongoSite$insert(tableValues$site)
-#     shinyjs::show("thankyou_msgSite")
-#   })
-#   
-#   #-------------------------------------------------------------------------------*
-#   # ---- SERVER: VISIT DATA ----
-#   #-------------------------------------------------------------------------------*
-#   # Input fields:
-#   
-#   formDataVisit <- reactive({
-#     sapply(names(getTableMetadata(fieldCodesVisit, fieldNamesVisit)$fields),
-#            function(x) as.character(input[[x]]))
-#   })
-#   
-#   # Read data associated with site into reactive values container:
-#   
-#   observe({
-#     if(!is.null(input$site)){
-#       if(input$site != ''){
-#         visitTable <- tableValues$visit
-#         if(nrow(visitTable) > 0){
-#           tableValues$visit <- visitTable %>%
-#             select(one_of(fieldCodesVisit))
-#         } else {
-#           tableValues$visit <- emptyDataFrame(fieldCodesVisit)
-#         }
-#       }
-#     }
-#   })
-#   
-#   # Add or modify records:
-#   
-#   observeEvent(input$submitVisit, {
-#     tableValues$visit <- dataAddOrModify(
-#       tableValues$visit,
-#       input$responsesVisit_rows_selected, 
-#       formDataVisit())
-#     createBlankInputs(blankFieldsVisit, session)
-#   }, priority = 1)
-#   
-#   # Select row in table to show details in inputs:
-#   
-#   observeEvent(input$responsesVisit_rows_selected, {
-#     showRecordInputs(tableValues$visit, input$responsesVisit_rows_selected,
-#                      fieldCodesVisit, session)
-#   })
-#   
-#   # When "clear inputs" is pressed, make some inputs blank:
-#   
-#   observeEvent(input$newVisit, {
-#     createBlankInputs(blankFieldsVisit, session)
-#   })
-#   
-#   # Delete selected record:
-#   
-#   observeEvent(input$deleteVisit, {
-#     tableValues$visit <- deleteRecord(
-#       tableValues$visit,
-#       input$responsesVisit_rows_selected)
-#   }, priority = 1)
-#   
-#   # Data table output:
-#   
-#   output$responsesVisit <- DT::renderDataTable({
-#     # Update after submit or delete is clicked
-#     input$submitVisit ; input$deleteVisit
-#     # Table display:
-#     tableValues$visit
-#   }, options = list(paging = FALSE, lengthChange = FALSE, columns.defaultContent = ''),
-#   server = FALSE, selection = "single",
-#   colnames = unname(getTableMetadata(fieldCodesVisit, fieldNamesVisit)$fields))
-#   
-#   # Save data:
-#   
-#   observeEvent(input$submitVisitData, {
-#     mongoVisit <- mongo('visit_data', url = mongoURL)
-#     # Remove data associated with site from database:
-#     mongoVisit$remove(siteQuery('site', input$site), multiple = TRUE)
-#     # Add data to database:
-#     mongoVisit$insert(tableValues$visit)
-#     shinyjs::show("thankyou_msgVisit")
-#   })
-#   
-#   #----------------------------------------------------------------------*
-#   # ENCOUNTER DATA
-#   #----------------------------------------------------------------------*
-#   # Input fields:
-#   
-#   formDataEnc <- reactive({
-#     sapply(names(getTableMetadata(fieldCodesEnc, fieldNamesEnc)$fields),
-#            function(x) as.character(input[[x]]))
-#   })
-#   
-#   # Read data associated with site into reactive values container:
-#   
-#   observe({
-#     if(!is.null(input$site)){
-#       if(input$site != ''){
-#         encTable <- tableValues$enc %>%
-#           filter(site == input$site)
-#         if(nrow(encTable) > 0){
-#           tableValues$encTable <- encTable %>%
-#             select(one_of(fieldCodesEnc))
-#         } else {
-#           tableValues$encTable <- emptyDataFrame(fieldCodesEnc)
-#         }
-#       }
-#     }
-#   })
-#   
-#   # Add or modify records:
-#   
-#   observeEvent(input$submitEnc, {
-#     tableValues$encTable <- dataAddOrModify(
-#       tableValues$encTable,
-#       input$responsesEnc_rows_selected, 
-#       formDataEnc())
-#     createBlankInputs(blankFieldsEnc, session)
-#   }, priority = 1)
-#   
-#   # Select row in table to show details in inputs:
-#   
-#   observeEvent(input$responsesEnc_rows_selected, {
-#     showRecordInputs(tableValues$encTable, input$responsesEnc_rows_selected,
-#                      fieldCodesEnc, session)
-#   })
-#   
-#   # When "clear inputs" is pressed, make some inputs blank:
-#   
-#   observeEvent(input$newEnc, {
-#     createBlankInputs(blankFieldsEnc, session)
-#   })
-#   
-#   # Delete selected record:
-#   
-#   observeEvent(input$deleteEnc, {
-#     tableValues$encTable <- deleteRecord(
-#       tableValues$encTable,
-#       input$responsesEnc_rows_selected)
-#   }, priority = 1)
-#   
-#   # Data table output:
-#   
-#   output$responsesEnc <- DT::renderDataTable({
-#     # Update after submit or delete is clicked
-#     input$submitEnc ; input$deleteEnc
-#     # Table display:
-#     tableValues$encTable
-#   }, options = list(lengthChange = FALSE, paging = FALSE, columns.defaultContent = ''),
-#   server = FALSE, selection = "single",
-#   colnames = unname(getTableMetadata(fieldCodesEnc, fieldNamesEnc)$fields))
-#   
-#   # Save data:
-#   
-#   observeEvent(input$submitEncData, {
-#     mongoEnc <- mongo('encounter_data', url = mongoURL)
-#     # Remove data associated with site from database:
-#     mongoEnc$remove(siteQuery('site', input$site), multiple = TRUE)
-#     # Add data to database:
-#     mongoEnc$insert(tableValues$encTable)
-#     shinyjs::show("thankyou_msgEnc")
-#   })
-#   
+  
   #-------------------------------------------------------------------------------*
   # ---- SERVER: QUERY BANDING RECORDS ----
   #-------------------------------------------------------------------------------*
@@ -1326,36 +867,33 @@ server <- function(input, output, session) {
     if(!is.null(tableValues$queryTable)){
       outTable <- tableValues$queryTable
     }
-      if(input$showAllSites != TRUE){
-        outTable <- outTable %>% filter(siteID == input$siteIDQuery)
-      }
-      outTable
+    if(input$showAllSites != TRUE){
+      outTable <- outTable %>% filter(siteID == input$siteIDQuery)
+    }
+    outTable
   })
   
   output$uiQuerySppChoices <- renderUI({
     selectInput("sppQuery", "",choices = queryTableBySite()$spp)
   })
   
- queryTable <- reactive({
-   if(!is.null(queryTableBySite())){
-    queryOut <- queryTableBySite()
-    if(input$showAllSpp != TRUE) {
-      queryOut <- queryOut %>% filter(spp == input$sppQuery)
+  queryTable <- reactive({
+    if(!is.null(queryTableBySite())){
+      queryOut <- queryTableBySite()
+      if(input$showAllSpp != TRUE) {
+        queryOut <- queryOut %>% filter(spp == input$sppQuery)
+      }
+      if(input$showAllSex != TRUE) {
+        queryOut <- queryOut %>% filter(sex == input$sexQuery)
+      }
+      if(input$showAllColorCombos != TRUE) {
+        queryOut <- queryOut %>%
+          filter(str_detect(colorCombo, toupper(input$colorComboQuery)))
+      }
+      queryOut
     }
-    if(input$showAllSex != TRUE) {
-      queryOut <- queryOut %>% filter(sex == input$sexQuery)
-    }
-    if(input$showAllColorCombos != TRUE) {
-      queryOut <- queryOut %>%
-        filter(str_detect(colorCombo, toupper(input$colorComboQuery)))
-    }
-    queryOut
-   }
   })
   
-#   observe({
-#     tableValues$queryTableOut <- queryTable()
-#   })
   
   output$queryTable <- DT::renderDataTable(
     DT::datatable({
@@ -1370,208 +908,4 @@ server <- function(input, output, session) {
     }
   )
   
-#   #-------------------------------------------------------------------------------*
-#   # ---- SERVER: SUBMIT POINT COUNT DATA ----
-#   #-------------------------------------------------------------------------------*
-#   # Input fields:
-#   
-#   formDataPc <- reactive({
-#     sapply(names(getTableMetadata(fieldCodesPc, fieldNamesPc)$fields),
-#            function(x) as.character(input[[x]]))
-#   })
-#   
-#   # Read table values into reactive container:
-#   
-#   observe({
-#     if(!is.null(input$site)){
-#       if(input$site != ''){
-#         pcTable <- tableValues$pointCount
-#         if(nrow(pcTable) > 0){
-#           tableValues$pcTable <- pcTable %>%
-#             select(one_of(fieldCodesPc))
-#         } else {
-#           tableValues$pcTable <- emptyDataFrame(fieldCodesPc)
-#         }
-#       }
-#     }
-#   })
-#   
-#   # Add or modify records:
-#   
-#   observeEvent(input$submitPc, {
-#     tableValues$pcTable <- dataAddOrModify(
-#       tableValues$pcTable,
-#       input$responsesPc_rows_selected, 
-#       formDataPc())
-#     createBlankInputs(blankFieldsPc, session)
-#   }, priority = 1)
-#   
-#   # Select row in table to show details in inputs:
-#   
-#   observeEvent(input$responsesPc_rows_selected, {
-#     showRecordInputs(tableValues$pcTable, input$responsesPc_rows_selected,
-#                      fieldCodesPc, session)
-#   })
-#   
-#   # When "clear inputs" is pressed, make some inputs blank:
-#   
-#   observeEvent(input$newPc, {
-#     createBlankInputs(blankFieldsPc, session)
-#   })
-#   
-#   # Delete selected record:
-#   
-#   observeEvent(input$deletePc, {
-#     tableValues$pcTable <- deleteRecord(
-#       tableValues$pcTable,
-#       input$responsesPc_rows_selected)
-#   }, priority = 1)
-#   
-#   # Data table output:
-#   
-#   output$responsesPc <- DT::renderDataTable({
-#     # Update after submit or delete is clicked
-#     input$submitPc ; input$deletePc
-#     # Table display:
-#     tableValues$pcTable
-#   }, options = list(lengthChange = FALSE, paging = FALSE, columns.defaultContent = ''),
-#   server = FALSE, selection = "single",
-#   colnames = unname(getTableMetadata(fieldCodesPc, fieldNamesPc)$fields))
-#   
-#   # Save data:
-#   
-#   observeEvent(input$submitPcData, {
-#     mongoPc <- mongo('pointCount_data', url = mongoURL)
-#     # Remove data associated with site from database:
-#     mongoPc$remove(siteQuery('site', input$site), multiple = TRUE)
-#     # Add data to database:
-#     mongoPc$insert(tableValues$pcTable)
-#     shinyjs::show("thankyou_msgPc")
-#   })
-#   
-#   #-------------------------------------------------------------------------------*
-#   # ---- SERVER: NEST SUMMARY DATA ----
-#   #-------------------------------------------------------------------------------*
-#   # Input fields:
-#   
-#   formDataNestSummary <- reactive({
-#     sapply(names(getTableMetadata(fieldCodesNestSummary, fieldNamesNestSummary)$fields),
-#            function(x) as.character(input[[x]]))
-#   })
-#   
-#   # Add or modify records:
-#   
-#   observeEvent(input$submitNestSummary, {
-#     tableValues$nestSummary <- dataAddOrModify(
-#       tableValues$nestSummary,
-#       input$responsesNestSummary_rows_selected, 
-#       formDataNestSummary())
-#     createBlankInputs(blankFieldsNestSummary, session)
-#   }, priority = 1)
-#   
-#   # Select row in table to show details in inputs:
-#   
-#   observeEvent(input$responsesNestSummary_rows_selected, {
-#     showRecordInputs(tableValues$nestSummary, input$responsesNestSummary_rows_selected,
-#                      fieldCodesNestSummary, session)
-#   })
-#   
-#   # When "clear inputs" is pressed, make some inputs blank:
-#   
-#   observeEvent(input$newNestSummary, {
-#     createBlankInputs(blankFieldsNestSummary, session)
-#   })
-#   
-#   # Delete selected record:
-#   
-#   observeEvent(input$deleteNestSummary, {
-#     tableValues$nestSummary <- deleteRecord(
-#       tableValues$nestSummary,
-#       input$responsesNestSummary_rows_selected)
-#   }, priority = 1)
-#   
-#   # Data table output:
-#   
-#   output$responsesNestSummary <- DT::renderDataTable({
-#     # Update after submit or delete is clicked
-#     input$submitNestSummary ; input$deleteNestSummary
-#     # Table display:
-#     tableValues$nestSummary
-#   }, options = list(lengthChange = FALSE, paging = FALSE, columns.defaultContent = ''),
-#   server = FALSE, selection = "single",
-#   colnames = unname(getTableMetadata(fieldCodesNestSummary, fieldNamesNestSummary)$fields))
-#   
-#   # Save data:
-#   
-#   observeEvent(input$submitNestSummaryData, {
-#     mongoNestSummary <- mongo('nest_summary_data', url = mongoURL)
-#     # Remove data associated with site from database:
-#     mongoNestSummary$remove(siteQuery('site', input$site), multiple = TRUE)
-#     # Add data to database:
-#     mongoNestSummary$insert(tableValues$nestSummary)
-#     shinyjs::show("thankyou_msgNestSummary")
-#   })
-#   
-#   #-------------------------------------------------------------------------------*
-#   # ---- SERVER: NEST OBSERVATION DATA ----
-#   #-------------------------------------------------------------------------------*
-#   # Input fields:
-#   
-#   formDataNest <- reactive({
-#     sapply(names(getTableMetadata(fieldCodesNest, fieldNamesNest)$fields),
-#            function(x) as.character(input[[x]]))
-#   })
-#   
-#   # Add or modify records:
-#   
-#   observeEvent(input$submitNest, {
-#     tableValues$nest <- dataAddOrModify(
-#       tableValues$nest,
-#       input$responsesNest_rows_selected, 
-#       formDataNest())
-#     createBlankInputs(blankFieldsNest, session)
-#   }, priority = 1)
-#   
-#   # Select row in table to show details in inputs:
-#   
-#   observeEvent(input$responsesNest_rows_selected, {
-#     showRecordInputs(tableValues$nest, input$responsesNest_rows_selected,
-#                      fieldCodesNest, session)
-#   })
-#   
-#   # When "clear inputs" is pressed, make some inputs blank:
-#   
-#   observeEvent(input$newNest, {
-#     createBlankInputs(blankFieldsNest, session)
-#   })
-#   
-#   # Delete selected record:
-#   
-#   observeEvent(input$deleteNest, {
-#     tableValues$nest <- deleteRecord(
-#       tableValues$nest,
-#       input$responsesNest_rows_selected)
-#   }, priority = 1)
-#   
-#   # Data table output:
-#   
-#   output$responsesNest <- DT::renderDataTable({
-#     # Update after submit or delete is clicked
-#     input$submitNest ; input$deleteNest
-#     # Table display:
-#     tableValues$nest
-#   }, options = list(lengthChange = FALSE, paging = FALSE, columns.defaultContent = ''),
-#   server = FALSE, selection = "single",
-#   colnames = unname(getTableMetadata(fieldCodesNest, fieldNamesNest)$fields))
-#   
-#   # Save data:
-#   
-#   observeEvent(input$submitNestData, {
-#     mongoNest <- mongo('nest_observation_data', url = mongoURL)
-#     # Remove data associated with site from database:
-#     mongoNest$remove(siteQuery('site', input$site), multiple = TRUE)
-#     # Add data to database:
-#     mongoNest$insert(tableValues$nest)
-#     shinyjs::show("thankyou_msgNest")
-  # })
 }
