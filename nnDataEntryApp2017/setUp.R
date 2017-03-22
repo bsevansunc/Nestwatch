@@ -120,7 +120,8 @@ getAllPossibleCombos <- function(colorValues){
     distinct %>%
     arrange(colorL, colorR) %>%
     transmute(colorCombo = paste(colorL, colorR, sep = ',')) %>%
-    .$colorCombo %>% c('noData')
+    .$colorCombo
+  return(colorCombos)
 }
 
 # Entries for drop-down menu items:
