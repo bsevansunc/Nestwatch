@@ -750,6 +750,94 @@ server <- function(input, output, session) {
     shinyjs::alert('Thank you, your techRs data have been submitted!')
   })
   
+  #--------------------------------------------------------------------*
+  # Pc table filtered by site:
+  #--------------------------------------------------------------------*
+  
+  # Input fields:
+  
+  formDataPc <- reactive({
+    sapply(names(getTableMetadata(fieldCodesPc,
+                                  fieldNamesPc)$fields),
+           function(x) as.character(input[[x]]))
+  })
+  
+  # Get data:
+  
+  observe({
+    if(!is.null(input$hub)){
+      if(input$hub != 'noData'){
+        pcMongo <- mongo('pcTable', url = mongoURL)
+        pcTable <- pcMongo$find(
+          query = siteDateQuery('siteIDPc', input$siteIDPc,
+                                'datePc', input$datePc),
+          fields = '{"_row" : 0, "_id" : 0}') %>%
+          mongoToTblDf
+        if(nrow(pcTable) > 0){
+          tableValues$pc <- pcTable %>%
+            select(one_of(fieldCodesPc))
+        } else {
+          tableValues$pc <- emptyDataFrame(fieldCodesPc)
+        }
+      }
+    }
+  })
+  
+  # Add or modify records:
+  
+  observeEvent(input$addRecordPc, {
+    tableValues$pc <- dataAddOrModify(
+      tableValues$pc,
+      input$responsesPc_rows_selected, 
+      formDataPc())
+    createBlankInputs(blankFieldsPc, session)
+  }, priority = 1)
+  
+  
+  # Select row in table to show details in inputs:
+  
+  observeEvent(input$responsesPc_rows_selected, {
+    showRecordInputs(tableValues$pc, input$responsesPc_rows_selected,
+                     fieldCodesPc, session)
+  })
+  
+  # Delete selected record:
+  
+  observeEvent(input$deletePc, {
+    tableValues$pc <- deleteRecord(
+      tableValues$pc,
+      input$responsesPc_rows_selected)
+  }, priority = 1)
+  
+  # Data table output:
+  
+  output$responsesPc <- DT::renderDataTable({
+    # Update after submit or delete is clicked
+    input$addRecordPc ; input$deletePc
+    # Table display:
+    tableValues$pc
+  }, options = list(lengthChange = FALSE, paging = FALSE, columns.defaultContent = ''),
+  server = FALSE, selection = "single",
+  colnames = unname(getTableMetadata(fieldCodesPc, fieldNamesPc)$fields))
+  
+  # Save data:
+  
+  observeEvent(input$submitPc, {
+    mongoPc <- mongo('pcTable', url = mongoURL)
+    # Remove data associated with site from database:
+    mongoPc$remove(siteDateQuery('siteIDPc', input$siteIDPc,
+                                 'datePc', input$datePc), multiple = TRUE)
+    # Add data to database:
+    mongoPc$insert(tableValues$pc)
+    shinyjs::alert('Thank you, your pc data have been submitted!')
+  })
+  
+  #-------------------------------------------------------------------------------*
+  # ---- SERVER: QUERY AOU names ----
+  #-------------------------------------------------------------------------------*
+  output$aouTable = DT::renderDataTable(
+    datatable(aouCodes, filter = 'none', rownames = FALSE,
+              options = list(pageLength = 3)))
   
   
 ######################################################################################
@@ -1281,14 +1369,7 @@ server <- function(input, output, session) {
       write.csv(queryTable(), file, row.names = FALSE)
     }
   )
-
-#   #-------------------------------------------------------------------------------*
-#   # ---- SERVER: QUERY AOU names ----
-#   #-------------------------------------------------------------------------------*
-#   output$aouTable = DT::renderDataTable(
-#     datatable(aouCodes, filter = 'none', rownames = FALSE,
-#               options = list(pageLength = 3)))
-#   
+  
 #   #-------------------------------------------------------------------------------*
 #   # ---- SERVER: SUBMIT POINT COUNT DATA ----
 #   #-------------------------------------------------------------------------------*
