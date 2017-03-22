@@ -381,6 +381,11 @@ shinyUI(
     # ---- Point count table ----
     #--------------------------------------------------------------------*
     br(),
+    hr(),
+    textAouQuery,
+    fluidRow(column(11, DT::dataTableOutput('aouTable'))),
+    hr(),
+    br(),
     fluidRow(
       column(3, textInput('siteIDPc', 'Site ID')),
       column(3, textInput('datePc', 'Date')),
