@@ -161,7 +161,7 @@ choiceCountUnbanded <- c('noData',  0:100)
 
 fieldCodesTechRs <- read.csv('startData/techRsNames.csv')$names
 
-blankFieldsForayTechRs <- fieldCodesTechRs[-c(1,2,3)]
+blankFieldsTechRs <- fieldCodesTechRs[-c(1,2)]
 
 fieldNamesTechRs <- c('siteID', 'Date', 'Obs', 'Time', 'Foray #', 'Band #',
                       'Longitude', 'Latitude', 'rsType', 'Notes')
