@@ -9,6 +9,11 @@ mongoInsert <- function(inTable, mongoTable){
   connectionMongo$insert(inTable)
 }
 
+mongoRemove <- function(mongoTable){
+  connectionMongo <- mongo(mongoTable, url = mongoURL)
+  connectionMongo$remove(query = '{}', multiple = TRUE)
+}
+
 # Function to turn NA to 'noData'
 
 naToNoData <- function(x) ifelse(is.na(x), 'noData', x)
@@ -29,7 +34,7 @@ mongoNames <- c('contactTable', 'addressTable', 'locationTable',
                 'visitTable','captureTable','forayEffortTable',
                 'forayCountUnbandedTable','techRsTable', 'pcTable')
 
-for(i in 2:length(mongoNames)){
+for(i in 1:length(mongoNames)){
   inData <- paste0('startData/', mongoNames[i], '.csv')
   outName <- mongoNames[i] %>% str_replace('Table', '')
   namesVector <- paste0(
@@ -40,6 +45,7 @@ for(i in 2:length(mongoNames)){
     mutate_all(.funs = naToNoData)
   names(outData) <- namesVector
   # Add to mongo:
+  mongoRemove(mongoNames[i])
   mongoInsert(outData, mongoNames[i])
 }
 
