@@ -1,6 +1,11 @@
 # USER INTERFACE
 
+library(sp)
+library(geosphere)
 library(shiny)
+# library(tidyverse)
+# library(shinyBS)
+library(stringr)
 library(readr)
 library(mongolite)
 library(tidyr)
@@ -8,8 +13,43 @@ library(dplyr)
 library(lubridate)
 library(shinyjs)
 library(DT)
+# library(R.utils)
+library(markdown)
 
-source('setUp.R', local=TRUE)
+# No strings as factors!
+
+options(stringsAsFactors = FALSE)
+
+# Where's mongo?
+
+mongoURL <- "mongodb://bsevans:33shazam@ds025232.mlab.com:25232/nndataentry"
+
+# The functions that make things go:
+
+source('helperFunctions.R', local = TRUE)
+
+# Paragraphs, field descriptions, and such:
+
+source('textComponents.R', local = TRUE)
+
+# Field options:
+
+source('fieldOptions.R', local = TRUE)
+
+
+# Choices of NN regions:
+
+choiceRegions <- c('noData','Atlanta','Colorado', 'DC', 'Gainesville', 'Pittsburgh',
+                   'Raleigh', 'Springfield')
+
+names(choiceRegions) <- choiceRegions
+
+# source('setUp.R', local=TRUE)
+source('fieldOptions.R', local=TRUE)
+
+#===============================================================================*
+# ---- UI ----
+#===============================================================================*
 
 shinyUI(
   navbarPage(
@@ -32,9 +72,6 @@ shinyUI(
     br(),
     hr(),
     br(),
-    #===============================================================================*
-    # ---- UI TAB PANEL: VISIT DATA ----
-    #===============================================================================*
     #--------------------------------------------------------------------*
     # ---- Contact table ----
     #--------------------------------------------------------------------*
@@ -118,7 +155,7 @@ shinyUI(
     br(),
     fluidRow(
       column(3, textInput('siteIDLocation', 'Site ID', 'noData')),
-      column(2, dateInput('dateLocation', 'Date'), 'noData'),
+      column(2, dateInput('dateLocation', 'Date', '2017-01-01')),
       column(2, numericInput('longLocation' ,'Longitude', 99999)),
       column(2, numericInput('latLocation', 'Latitude', 99999)),
       column(1, numericInput('accuracyLocation', 'Accuracy', 99999)),
@@ -221,7 +258,7 @@ shinyUI(
       column(2, selectizeInput('timeCapture', 'Time',
                                choices = choiceTimeOfDay,
                                selected = '00:01')),
-      column(1, textInput('observerCapture', 'Observer', 'noData')),
+      column(1, textInput('obsCapture', 'Observer', 'noData')),
       column(1, selectizeInput('encCapture', 'Encounter',
                                choices = choiceEnc,
                                selected = 'noData')),
@@ -374,7 +411,7 @@ shinyUI(
       column(2, numericInput('longTechRs', 'Longitude (-dd.dddd)', 99999)),
       column(2, numericInput('latTechRs', 'Latitude (dd.dddd)', 99999)),
       column(1, selectizeInput('typeTechRs', 'Resight type',
-                               choices = choiceTypeRs,
+                               choices = choiceTypeTechRs,
                                selected = 'noData'))
     ),
     fluidRow(
@@ -397,12 +434,7 @@ shinyUI(
                                     'Submit resight data',
                                     class = 'btn-primary'))
     ),
-    br(), shinyjs::hidden(
-      div(
-        id = 'thankyou_msgTechRs',
-        h3('Thanks, your resight data have been recorded!')
-      )
-    ),
+    br(), 
     br(),
     hr(),
     #--------------------------------------------------------------------*
@@ -520,6 +552,50 @@ shinyUI(
                  DT::dataTableOutput('queryTable'),
                  width = 9, position = 'right')
              )),
+    #-------------------------------------------------------------------------------*
+    # ---- UI TAB PANEL: RESIGHT BY PARTICIPANT TABLE ----
+    #-------------------------------------------------------------------------------*
+    tabPanel(strong('Participant resights'),
+             fluidPage(
+               useShinyjs(),
+               fluidRow(
+                 column(4, selectizeInput('siteIDPartRs', 'Site ID',
+                                          choices = siteIdTable %>%
+                                            arrange(siteID) %>%
+                                            .$siteID %>%
+                                            c('noData'),
+                                          selected = 'noData')),
+                 column(2, dateInput('datePartRs', 'Date', '2017-01-01')),
+                 column(4, textInput('bandNumberPartRs', 'Band number', 'noData')),
+                 column(2, '')
+               ),
+               fluidRow(
+                 column(2, selectizeInput('typePartRs', 'Resight type',
+                                          choices = choiceTypePartRs,
+                                          selected = 'noData')),
+                 column(10, textInput('notesPartRs', 'Notes', 'noData'))
+               ),
+               br(),
+               fluidRow(column(6, ''),
+                        column(3, actionButton('addRecordPartRs', 
+                                               'Add record to table',
+                                               class = 'btn-primary'))),
+               hr(),
+               DT::dataTableOutput('responsesPartRs'),
+               br(),
+               fluidRow(column(1, ''),
+                        column(4, actionButton('deletePartRs',
+                                               'Delete record from table', 
+                                               class = 'btn-primary')),
+                        column(3, ' '),
+                        column(4, actionButton('submitPartRs', 
+                                               'Submit resight data',
+                                               class = 'btn-primary'))
+               ),
+               br(), 
+               br()
+               )
+             ),
     #-------------------------------------------------------------------------------*
     # ---- UI TAB PANEL: HABITAT SURVEY ----
     #-------------------------------------------------------------------------------*
