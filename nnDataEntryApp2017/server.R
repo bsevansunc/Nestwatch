@@ -341,10 +341,6 @@ server <- function(input, output, session) {
           if(input$siteId != 'noData'){
             locationTable <- locationTableFull %>%
               filter(siteIDLocation == input$siteIDLocation)
-            #           locationTable <- locationMongo$find(
-            #             query = siteQuery('siteIDLocation', input$siteIDLocation),
-            #             fields = '{"_row" : 0, "_id" : 0}') %>%
-            #             mongoToTblDf
             if(nrow(locationTable) > 0){
               tableValues$location <- locationTable %>%
                 select(one_of(fieldCodesLocation))
