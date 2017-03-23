@@ -1,15 +1,80 @@
 #---------------------------------------------------------------------------------*
-# ---- SITE ID TABLE ----
+# ---- GET DATA FROM MONGO ----
 #---------------------------------------------------------------------------------*
 
-siteIdTable <- read.csv('startData/siteIdTable.csv') %>%
-  tbl_df
+options(stringsAsFactors = FALSE)
+
+# Get fixed mongo data:
+
+mongoURL <- 'mongodb://bsevans:33shazam@ds025232.mlab.com:25232/nndataentry'
+
+# All possible AOU codes (for point counts):
+
+aouCodes <- mongoToTblDf(
+  mongo('aou_codes', url = mongoURL)$find()
+)
+
+justAlphaCode <- aouCodes %>% .$Alpha
+
+
+siteIdTable <- mongo('siteIdTable', url = mongoURL)$find()
 
 fieldCodesSiteId <- names(siteIdTable)
 
 fieldNamesSiteId <- c('siteID', 'Region')
 
+fieldCodesTable <- mongo('fieldNameFrame', url = mongoURL)$find()
+
 # Choices of NN regions:
+
+choiceRegions <- c('noData','Atlanta','Colorado', 'DC', 'Gainesville', 'Pittsburgh',
+                   'Raleigh', 'Springfield')
+
+names(choiceRegions) <- choiceRegions
+
+# Load tables used:
+
+fieldCodesContactInfo <- fieldCodesTable %>%
+  filter(dTable == 'contactNames') %>%
+  .$names
+
+fieldCodesAddress <- fieldCodesTable %>%
+  filter(dTable == 'addressNames') %>%
+  .$names
+
+fieldCodesLocation <- fieldCodesTable %>%
+  filter(dTable == 'locationNames') %>%
+  .$names
+
+fieldCodesVisit <- fieldCodesTable %>%
+  filter(dTable == 'visitNames') %>%
+  .$names
+
+fieldCodesCapture <- fieldCodesTable %>%
+  filter(dTable == 'captureNames') %>%
+  .$names
+
+fieldCodesForayEffort <- fieldCodesTable %>%
+  filter(dTable == 'forayEffortNames') %>%
+  .$names
+
+fieldCodesForayCountUnbanded <- fieldCodesTable %>%
+  filter(dTable == 'forayCountUnbandedNames') %>%
+  .$names
+
+fieldCodesTechRs <- fieldCodesTable %>%
+  filter(dTable == 'techRsNames') %>%
+  .$names
+
+fieldCodesPc <- fieldCodesTable %>%
+  filter(dTable == 'pcNames') %>%
+  .$names
+
+#---------------------------------------------------------------------------------*
+# ---- SITE ID TABLE ----
+#---------------------------------------------------------------------------------*
+
+# # Choices of NN regions:
 
 choiceRegions <- c('noData','Atlanta','Colorado', 'DC', 'Gainesville', 'Pittsburgh',
                    'Raleigh', 'Springfield')
@@ -20,9 +85,9 @@ names(choiceRegions) <- choiceRegions
 # ---- CONTACT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesContactInfo <- readTbl('startData/contactNames.csv') %>%
-  # mutate(names = str_replace_all(names, 'Contact', '')) %>%
-  .$names
+# fieldCodesContactInfo <- readTbl('startData/contactNames.csv') %>%
+#   # mutate(names = str_replace_all(names, 'Contact', '')) %>%
+#   .$names
 
 blankFieldsContactInfo <- fieldCodesContactInfo[-1]
 
@@ -34,7 +99,7 @@ fieldNamesContactInfo <- fieldNamesSite <- c(
 # ---- ADDRESS TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesAddress <- read.csv('startData/addressNames.csv')$names
+# fieldCodesAddress <- read.csv('startData/addressNames.csv')$names
 
 blankFieldsAddress <- fieldCodesAddress[-1]
 
@@ -46,7 +111,7 @@ fieldNamesAddress <- fieldNamesSite <- c(
 # ---- LOCATION TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesLocation <- read.csv('startData/locationNames.csv')$names
+# fieldCodesLocation <- read.csv('startData/locationNames.csv')$names
 
 blankFieldsLocation <- fieldCodesLocation[-c(1,2)]
 
@@ -58,13 +123,13 @@ choiceDate <- c('1999-09-09', seq(
   as.Date(ISOdate(2030, 1, 1)), 1) %>%
     as.character)
 
-choiceLocationMethod <- c('noData', 'GPS', 'map')
+choiceLocationMethod <- c('noData', 'GPS', 'map', 'U')
 
 #---------------------------------------------------------------------------------*
 # ---- VISIT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesVisit <- read.csv('startData/visitNames.csv')$names
+# fieldCodesVisit <- read.csv('./startData/visitNames.csv')$names
 
 blankFieldsVisit <- fieldCodesVisit[-c(1,2)]
 
@@ -92,7 +157,7 @@ choiceEncounteredBirds <- c('noData', 'Y', 'N')
 # ---- CAPTURE TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesCapture <- read.csv('startData/captureNames.csv')$names
+# fieldCodesCapture <- read.csv('./startData/captureNames.csv')$names
 
 blankFieldsCapture <- fieldCodesCapture[-c(1,2,4)]
 
@@ -133,7 +198,7 @@ choiceFat <- c('noData', 0, 0.5, seq(1:5))
 # ---- RESIGHT FORAY EFFORT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesForayEffort <- read.csv('startData/forayEffortNames.csv')$names
+# fieldCodesForayEffort <- read.csv('./startData/forayEffortNames.csv')$names
 
 blankFieldsForayEffort <- fieldCodesForayEffort[-c(1,2,3)]
 
@@ -147,7 +212,7 @@ choicePathDistance <- c(99999, 0:10000)
 # ---- RESIGHT FORAY COUNT UNBANDED TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesForayCountUnbanded <- read.csv('startData/forayCountUnbandedNames.csv')$names
+# fieldCodesForayCountUnbanded <- read.csv('./startData/forayCountUnbandedNames.csv')$names
 
 blankFieldsForayCountUnbanded <- fieldCodesForayCountUnbanded[-c(1,2)]
 
@@ -159,7 +224,7 @@ choiceCountUnbanded <- c(99999,  0:100)
 # ---- RESIGHT TECHNICIAN TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesTechRs <- read.csv('startData/techRsNames.csv')$names
+# fieldCodesTechRs <- read.csv('startData/techRsNames.csv')$names
 
 blankFieldsTechRs <- fieldCodesTechRs[-c(1,2)]
 
@@ -172,7 +237,7 @@ choiceTypeTechRs <- c('noData', 'I', 'F', 'P')
 # ---- POINT COUNTS ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesPc <- read.csv('startData/pcNames.csv')$names
+# fieldCodesPc <- read.csv('startData/pcNames.csv')$names
 
 blankFieldsPc <- fieldCodesPc[-c(1:5)]
 
@@ -195,4 +260,18 @@ choiceDetection <- c('noData', 'V', 'A', 'B')
 # names(emptyDfPc) <- fieldNamesPc
 
 # blankFieldsPc <- c('distancePc','countPc', 'detectionPc','notesPc')
+
+#---------------------------------------------------------------------------------*
+# ---- PARTICIPANT RESIGHTS ----
+#---------------------------------------------------------------------------------*
+
+fieldCodesPartRs <- c('siteIDPartRs', 'datePartRs',
+                      'bandNumberPartRs', 'typePartRs', 'notesPartRs')
+
+blankFieldsPartRs <- fieldCodesPartRs[-1]
+
+choiceTypePartRs <- c('noData', 'P', 'N', 'D')
+
+fieldNamesPartRs <- c('siteID', 'Date', 'Band #','rsType', 'Notes')
+
 
