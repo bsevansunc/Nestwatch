@@ -195,12 +195,19 @@ shinyUI(
     br(),
     fluidRow(
       column(3, textInput('siteIDVisit', 'Site ID', 'noData')),
-      column(2, dateInput('dateVisit', 'Date', '2017-01-01')),
+      column(3, dateInput('dateVisit', 'Date', '2017-01-01')),
+      column(3, radioButtons('proofSwitchVisit', label = '',
+                             choices = c('Enter and modify new records',
+                                         'Proof and modify existing records'))),
+      column(3, '')
+    ),
+    fluidRow(
       column(2, textInput('observerVisit' ,'Observer(s)', 'noData')),
       column(5, selectizeInput('participantEngagementVisit',
                                'Participant Engagement',
                                choices = choiceParticipantEngagement,
-                               selected = 'noData'))
+                               selected = 'noData')),
+      column(5, '')
     ),
     fluidRow(
       column(2, selectizeInput('encounteredBirdsVisit', 'Encountered birds',
@@ -252,7 +259,10 @@ shinyUI(
     fluidRow(
       column(3, textInput('siteIDCapture', 'Site ID', 'noData')),
       column(3, textInput('dateCapture', 'Date', 'noData')),
-      column(6, '')
+      column(3, radioButtons('proofSwitchCapture', label = '',
+                             choices = c('Enter and modify new records',
+                                         'Proof and modify existing records'))),
+      column(3, '')
     ),
     fluidRow(
       column(2, selectizeInput('timeCapture', 'Time',
@@ -317,7 +327,10 @@ shinyUI(
     fluidRow(
       column(3, textInput('siteIDForayEffort', 'Site ID', 'noData')),
       column(3, textInput('dateForayEffort', 'Date', '2017-01-01')),
-      column(6, '')
+      column(3, radioButtons('proofSwitchForayEffort', label = '',
+                             choices = c('Enter and modify new records',
+                                         'Proof and modify existing records'))),
+      column(3, '')
     ),
     br(),
     fluidRow(
@@ -360,11 +373,17 @@ shinyUI(
     fluidRow(
       column(3, textInput('siteIDForayCountUnbanded', 'Site ID', 'noData')),
       column(3, textInput('dateForayCountUnbanded', 'Date', '2017-01-01')),
+      column(3, radioButtons('proofSwitchForayCountUnbanded', label = '',
+                             choices = c('Enter and modify new records',
+                                         'Proof and modify existing records'))),
+      column(3, '')
+    ),
+    fluidRow(
       column(2, selectizeInput('sppForayCountUnbanded', 'Species',
                                choices = choiceSpecies,
                                selected = 'noData')),
       column(2, numericInput('countForayCountUnbanded', 'Count', 0)),
-      column(2, '')
+      column(8, '')  
     ),
     br(),
     fluidRow(column(6, ''),
@@ -399,7 +418,10 @@ shinyUI(
     fluidRow(
       column(3, textInput('siteIDTechRs', 'Site ID', 'noData')),
       column(3, textInput('dateTechRs', 'Date', 'noData')),
-      column(6, '')
+      column(3, radioButtons('proofSwitchTechRs', label = '',
+                             choices = c('Enter and modify new records',
+                                         'Proof and modify existing records'))),
+      column(3, '')
     ),
     fluidRow(
       column(1, textInput('observerTechRs', 'Observer', 'noData')),
@@ -450,11 +472,17 @@ shinyUI(
     fluidRow(
       column(3, textInput('siteIDPc', 'Site ID', 'noData')),
       column(3, textInput('datePc', 'Date', 'noData')),
-      column(1, textInput('observerPc', 'Observer', 'noData')),
-      column(2, selectizeInput('startTimePc', 'Start time',
+      column(3, radioButtons('proofSwitchPc', label = '',
+                             choices = c('Enter and modify new records',
+                                         'Proof and modify existing records'))),
+      column(3, '')
+    ),
+    fluidRow(
+      column(2, textInput('observerPc', 'Observer', 'noData')),
+      column(3, selectizeInput('startTimePc', 'Start time',
                                choices = choiceTimeOfDay,
                                selected = '00:01')),
-      column(3, '')
+      column(7, '')
     ),
     fluidRow(
       column(1, selectizeInput('intervalPc', 'Interval', 
