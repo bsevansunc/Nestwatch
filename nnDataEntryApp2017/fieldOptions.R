@@ -27,7 +27,7 @@ fieldCodesTable <- mongo('fieldNameFrame', url = mongoURL)$find()
 
 # Choices of NN regions:
 
-choiceRegions <- c('noData','Atlanta','Colorado', 'DC', 'Gainesville', 'Pittsburgh',
+choiceRegions <- c('','Atlanta','Colorado', 'DC', 'Gainesville', 'Pittsburgh',
                    'Raleigh', 'Springfield')
 
 names(choiceRegions) <- choiceRegions
@@ -74,12 +74,7 @@ fieldCodesPc <- fieldCodesTable %>%
 # ---- SITE ID TABLE ----
 #---------------------------------------------------------------------------------*
 
-# # Choices of NN regions:
 
-choiceRegions <- c('noData','Atlanta','Colorado', 'DC', 'Gainesville', 'Pittsburgh',
-                   'Raleigh', 'Springfield')
-
-names(choiceRegions) <- choiceRegions
 
 #---------------------------------------------------------------------------------*
 # ---- CONTACT TABLE ----
@@ -118,12 +113,12 @@ blankFieldsLocation <- fieldCodesLocation[-c(1,2)]
 fieldNamesLocation <- c('siteID', 'Date', 'Longitude', 'Latitude', 'Accuracy',
                         'Location method', 'Location notes')
 
-choiceDate <- c('1999-09-09', seq(
+choiceDate <- c('', seq(
   as.Date(ISOdate(2000, 1, 15)),
   as.Date(ISOdate(2030, 1, 1)), 1) %>%
     as.character)
 
-choiceLocationMethod <- c('noData', 'GPS', 'map', 'U')
+choiceLocationMethod <- c('', 'GPS', 'map', 'U')
 
 #---------------------------------------------------------------------------------*
 # ---- VISIT TABLE ----
@@ -136,12 +131,12 @@ blankFieldsVisit <- fieldCodesVisit[-c(1,2)]
 fieldNamesVisit <- c('siteID', 'Date', 'Observer(s)', 'Participant engagement',
                      'Encountered birds', 'Net hours', 'Visit notes')
 
-choiceNetMinutes <- c(99999, 0:2000)
+choiceNetMinutes <- c('', 0:2000)
 
-choiceParticipantEngagement <- c('noData', '-', 0:5)
+choiceParticipantEngagement <- c('', '-', 0:5)
 
 names(choiceParticipantEngagement) <- c(
-  'noData',
+  '',
   'No visit was scheduled',
   'Participant should be avoided in the future',
   'Participant was not present or showed no interest during visit activities',
@@ -151,7 +146,7 @@ names(choiceParticipantEngagement) <- c(
   'Participant contributed during all visit activities'
 )
 
-choiceEncounteredBirds <- c('noData', 'Y', 'N')
+choiceEncounteredBirds <- c('', 'Y', 'N')
 
 #---------------------------------------------------------------------------------*
 # ---- CAPTURE TABLE ----
@@ -176,23 +171,23 @@ timeOfDay <- data.frame(
   slice(301:1321) %>%
   .$time
 
-choiceTimeOfDay <- c('00:01',timeOfDay)
+choiceTimeOfDay <- c('',timeOfDay)
 
-choiceEnc <- c('noData','R', 'B')
+choiceEnc <- c('','R', 'B')
 
-choiceSpecies <- c('noData',aouCodes$Alpha)
+choiceSpecies <- c('',aouCodes$Alpha)
 
 colorValues <- c('B', 'N', 'K', 'G', 'E', 'O', 'P', 'M', 'R', 'Y', 'W')
 
-choiceColors <- c('noData', getAllPossibleCombos(colorValues))
+choiceColors <- c('', getAllPossibleCombos(colorValues))
 
-choiceAge <- c('noData', 'HY', 'AHY', 'SY', 'ASY', 'U')
+choiceAge <- c('', 'HY', 'AHY', 'SY', 'ASY', 'U')
 
-choiceSex <- c('noData', 'M', 'F', 'U')
+choiceSex <- c('', 'M', 'F', 'U')
 
-choiceBreedingCond <-  c('noData','CP', 'BP')
+choiceBreedingCond <-  c('','CP', 'BP')
 
-choiceFat <- c('noData', 0, 0.5, seq(1:5))
+choiceFat <- c('', 0, 0.5, seq(1:5))
 
 #---------------------------------------------------------------------------------*
 # ---- RESIGHT FORAY EFFORT TABLE ----
@@ -206,7 +201,7 @@ fieldNamesForayEffort <- c(
   'siteID', 'Date', 'Obs','Foray #', 'Foray start', 'Foray end', 'Path distance (m)'
 )
 
-choicePathDistance <- c(99999, 0:10000)
+choicePathDistance <- c('', 0:10000)
 
 #---------------------------------------------------------------------------------*
 # ---- RESIGHT FORAY COUNT UNBANDED TABLE ----
@@ -218,7 +213,7 @@ blankFieldsForayCountUnbanded <- fieldCodesForayCountUnbanded[-c(1,2)]
 
 fieldNamesForayCountUnbanded <- c('siteID', 'Date', 'spp', 'Count')
 
-choiceCountUnbanded <- c(99999,  0:100)
+choiceCountUnbanded <- c('',  0:100)
 
 #---------------------------------------------------------------------------------*
 # ---- RESIGHT TECHNICIAN TABLE ----
@@ -231,7 +226,7 @@ blankFieldsTechRs <- fieldCodesTechRs[-c(1,2)]
 fieldNamesTechRs <- c('siteID', 'Date', 'Obs', 'Time', 'Foray #', 'Band #',
                       'Longitude', 'Latitude', 'rsType', 'Notes')
 
-choiceTypeTechRs <- c('noData', 'I', 'F', 'P')
+choiceTypeTechRs <- c('', 'I', 'F', 'P')
 
 #---------------------------------------------------------------------------------*
 # ---- POINT COUNTS ----
@@ -239,7 +234,9 @@ choiceTypeTechRs <- c('noData', 'I', 'F', 'P')
 
 # fieldCodesPc <- read.csv('startData/pcNames.csv')$names
 
-blankFieldsPc <- fieldCodesPc[-c(1:5)]
+blankFieldsPc <- fieldCodesPc[-c(1:5, 7:11)]
+
+zeroFieldsPc <- fieldCodesPc[-c(1:6, 12)]
 
 fieldNamesPc <- c(
   'siteID','Date', 'Obs', 'Start time', 'Interval', 'SPP',
@@ -247,9 +244,9 @@ fieldNamesPc <- c(
   'Detection'
 )
 
-choiceInterval <- c('noData', 1:3)
+choiceInterval <- c('', 1:3)
 
-choiceDetection <- c('noData', 'V', 'A', 'B')
+choiceDetection <- c('', 'V', 'A', 'B')
 
 # Define field names for point count data table:
 
@@ -270,7 +267,7 @@ fieldCodesPartRs <- c('siteIDPartRs', 'datePartRs',
 
 blankFieldsPartRs <- fieldCodesPartRs[-1]
 
-choiceTypePartRs <- c('noData', 'P', 'N', 'D')
+choiceTypePartRs <- c('', 'P', 'N', 'D')
 
 fieldNamesPartRs <- c('siteID', 'Date', 'Band #','rsType', 'Notes')
 
