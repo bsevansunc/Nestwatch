@@ -897,6 +897,7 @@ server <- function(input, output, session) {
       input$responsesPc_rows_selected, 
       formDataPc())
     createBlankInputs(blankFieldsPc, session)
+    createZeroInputs(zeroFieldsPc, session)
   }, priority = 1)
   
   
