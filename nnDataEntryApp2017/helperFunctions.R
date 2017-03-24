@@ -143,10 +143,20 @@ createBlankInputs <- function(fieldCodes, session){
   }
 }
 
+createZeroInputs <- function(fieldCodes, session){
+  for(i in 1:length(fieldCodes)){
+    updateTextInput(session, fieldCodes[i], value = 0)
+  }
+}
+
 # castData ----
 # Function takes values of inputs, if there are any, and puts them in a 1-row data frame:
 
 castData <- function(fieldValues){
+  for(i in 1:length(fieldValues)){
+    if(is.na(fieldValues[i])) fieldValues[i] <- 'noData'
+    if(fieldValues[i] == '') fieldValues[i] <- 'noData'
+  }
   return(data.frame(t(as.list(fieldValues)),
                     stringsAsFactors = FALSE))
 }
