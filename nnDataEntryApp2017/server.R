@@ -63,13 +63,6 @@ server <- function(input, output, session) {
   contactInfoMongo <- mongo('contactTable', url = mongoURL)
   addressMongo <- mongo('addressTable', url = mongoURL)
   locationMongo <- mongo('locationTable', url = mongoURL)
-  visitMongo <- mongo('visitTable', url = mongoURL)
-  captureMongo <- mongo('captureTable', url = mongoURL)
-  forayEffortMongo <- mongo('forayEffortTable', url = mongoURL)
-  forayCountUnbandedMongo <- mongo('forayCountUnbandedTable', url = mongoURL)
-  techRsMongo <- mongo('techRsTable', url = mongoURL)
-  pcMongo <- mongo('pcTable', url = mongoURL)
-  partRsMongo <- mongo('partRsTable', url = mongoURL)
   
   # Location data will only be read once from mongo:
   
@@ -415,23 +408,19 @@ server <- function(input, output, session) {
   # Get data:
   
   observe({
-    if(!is.null(input$hub)){
-      if(input$hub != 'noData'){
-        if(!is.null(input$siteId)){
-          if(input$siteId != 'noData'){
-            if(!is.null(input$dateVisit)){
-              visitTable <- visitMongo$find(
-                query = siteDateQuery('siteIDVisit', input$siteIDVisit, 'dateVisit', input$dateVisit),
-                fields = '{"_row" : 0, "_id" : 0}') %>%
-                mongoToTblDf
-              if(nrow(visitTable) > 0){
-                tableValues$visit <- visitTable %>%
-                  select(one_of(fieldCodesVisit))
-              } else {
-                tableValues$visit <- emptyDataFrame(fieldCodesVisit)
-              }
-            }
-          }
+    if(input$proofSwitchVisit == 'new'){
+      tableValues$visit <- emptyDataFrame(fieldCodesVisit)
+    } else {
+      if(!is.null(input$hub) & !is.null(input$siteId)){
+        visitTable <- visitMongo$find(
+          query = siteQuery('siteIDVisit', input$siteIDVisit),
+          fields = '{"_row" : 0, "_id" : 0}') %>%
+          mongoToTblDf
+        if(nrow(visitTable) > 0){
+          tableValues$visit <- visitTable %>%
+            select(one_of(fieldCodesVisit))
+        } else {
+          tableValues$visit <- emptyDataFrame(fieldCodesVisit)
         }
       }
     }
@@ -446,7 +435,6 @@ server <- function(input, output, session) {
       formDataVisit())
     createBlankInputs(blankFieldsVisit, session)
   }, priority = 1)
-  
   
   # Select row in table to show details in inputs:
   
@@ -477,11 +465,17 @@ server <- function(input, output, session) {
   # Save data:
   
   observeEvent(input$submitVisit, {
-    # Remove data associated with site from database:
-    visitMongo$remove(siteDateQuery('siteIDVisit', input$siteIDVisit, 'dateVisit',
-                                    input$dateVisit), multiple = TRUE)
-    # Add data to database:
-    visitMongo$insert(tableValues$visit)
+    visitMongo <- mongo('visitTable', url = mongoURL)
+    if(input$proofSwitchVisit == 'new'){
+      # Add data to database:
+      visitMongo$insert(tableValues$visit)
+    } else {
+      # Remove data associated with site from database:
+      visitMongo$remove(siteQuery('siteIDVisit', input$siteIDVisit),
+                        multiple = TRUE)
+      # Add data to database:
+      visitMongo$insert(tableValues$visit)
+    }
     shinyjs::alert('Thank you, your visit data have been submitted!')
   })
   
@@ -500,28 +494,48 @@ server <- function(input, output, session) {
   # Get data:
   
   observe({
-    if(!is.null(input$hub)){
-      if(input$hub != 'noData'){
-        if(!is.null(input$siteId)){
-          if(input$siteId != 'noData'){
-            if(!is.null(input$dateCapture)){
-              captureTable <- captureMongo$find(
-                query = siteDateQuery('siteIDCapture', input$siteIDCapture,
-                                      'dateCapture', input$dateCapture),
-                fields = '{"_row" : 0, "_id" : 0}') %>%
-                mongoToTblDf
-              if(nrow(captureTable) > 0){
-                tableValues$capture <- captureTable %>%
-                  select(one_of(fieldCodesCapture))
-              } else {
-                tableValues$capture <- emptyDataFrame(fieldCodesCapture)
-              }
-            }
-          }
+    if(input$proofSwitchCapture == 'new'){
+      tableValues$capture <- emptyDataFrame(fieldCodesCapture)
+    } else {
+      if(!is.null(input$hub) & !is.null(input$siteId)){
+        captureMongo <- mongo('captureTable', url = mongoURL)
+        captureTable <- captureMongo$find(
+          query = siteQuery('siteIDCapture', input$siteIDCapture),
+          fields = '{"_row" : 0, "_id" : 0}') %>%
+          mongoToTblDf
+        if(nrow(captureTable) > 0){
+          tableValues$capture <- captureTable %>%
+            select(one_of(fieldCodesCapture))
+        } else {
+          tableValues$capture <- emptyDataFrame(fieldCodesCapture)
         }
       }
     }
   })
+  
+#   observe({
+#     if(!is.null(input$hub)){
+#       if(input$hub != 'noData'){
+#         if(!is.null(input$siteId)){
+#           if(input$siteId != 'noData'){
+#             if(!is.null(input$dateCapture)){
+#               captureTable <- captureMongo$find(
+#                 query = siteDateQuery('siteIDCapture', input$siteIDCapture,
+#                                       'dateCapture', input$dateCapture),
+#                 fields = '{"_row" : 0, "_id" : 0}') %>%
+#                 mongoToTblDf
+#               if(nrow(captureTable) > 0){
+#                 tableValues$capture <- captureTable %>%
+#                   select(one_of(fieldCodesCapture))
+#               } else {
+#                 tableValues$capture <- emptyDataFrame(fieldCodesCapture)
+#               }
+#             }
+#           }
+#         }
+#       }
+#     }
+#   })
   
   # Add or modify records:
   
@@ -563,11 +577,17 @@ server <- function(input, output, session) {
   # Save data:
   
   observeEvent(input$submitCapture, {
-    # Remove data associated with site from database:
-    captureMongo$remove(siteDateQuery('siteIDCapture', input$siteIDCapture,
-                                      'dateCapture', input$dateCapture), multiple = TRUE)
-    # Add data to database:
-    captureMongo$insert(tableValues$capture)
+    captureMongo <- mongo('captureTable', url = mongoURL)
+    if(input$proofSwitchCapture == 'new'){
+      # Add data to database:
+      captureMongo$insert(tableValues$capture)
+    } else {
+      # Remove data associated with site from database:
+      captureMongo$remove(siteQuery('siteIDCapture', input$siteIDCapture),
+                          multiple = TRUE)
+      # Add data to database:
+      captureMongo$insert(tableValues$capture)
+    }
     shinyjs::alert('Thank you, your capture data have been submitted!')
   })
   
@@ -586,24 +606,20 @@ server <- function(input, output, session) {
   # Get data:
   
   observe({
-    if(!is.null(input$hub)){
-      if(input$hub != 'noData'){
-        if(!is.null(input$siteId)){
-          if(input$siteId != 'noData'){
-            if(!is.null(input$dateForayEffort)){
-              forayEffortTable <- forayEffortMongo$find(
-                query = siteDateQuery('siteIDForayEffort', input$siteIDForayEffort,
-                                      'dateForayEffort', input$dateForayEffort),
-                fields = '{"_row" : 0, "_id" : 0}') %>%
-                mongoToTblDf
-              if(nrow(forayEffortTable) > 0){
-                tableValues$forayEffort <- forayEffortTable %>%
-                  select(one_of(fieldCodesForayEffort))
-              } else {
-                tableValues$forayEffort <- emptyDataFrame(fieldCodesForayEffort)
-              }
-            }
-          }
+    if(input$proofSwitchForayEffort == 'new'){
+      tableValues$forayEffort <- emptyDataFrame(fieldCodesForayEffort)
+    } else {
+      if(!is.null(input$hub) & !is.null(input$siteId)){
+        forayEffortMongo <- mongo('forayEffortTable', url = mongoURL)
+        forayEffortTable <- forayEffortMongo$find(
+          query = siteQuery('siteIDForayEffort', input$siteIDForayEffort),
+          fields = '{"_row" : 0, "_id" : 0}') %>%
+          mongoToTblDf
+        if(nrow(forayEffortTable) > 0){
+          tableValues$forayEffort <- forayEffortTable %>%
+            select(one_of(fieldCodesForayEffort))
+        } else {
+          tableValues$forayEffort <- emptyDataFrame(fieldCodesForayEffort)
         }
       }
     }
@@ -649,11 +665,17 @@ server <- function(input, output, session) {
   # Save data:
   
   observeEvent(input$submitForayEffort, {
-    # Remove data associated with site from database:
-    forayEffortMongo$remove(siteDateQuery('siteIDForayEffort', input$siteIDForayEffort,
-                                          'dateForayEffort', input$dateForayEffort), multiple = TRUE)
-    # Add data to database:
-    forayEffortMongo$insert(tableValues$forayEffort)
+    forayEffortMongo <- mongo('forayEffortTable', url = mongoURL)
+    if(input$proofSwitchForayEffort == 'new'){
+      # Add data to database:
+      forayEffortMongo$insert(tableValues$forayEffort)
+    } else {
+      # Remove data associated with site from database:
+      forayEffortMongo$remove(siteQuery('siteIDForayEffort', input$siteIDForayEffort),
+                              multiple = TRUE)
+      # Add data to database:
+      forayEffortMongo$insert(tableValues$forayEffort)
+    }
     shinyjs::alert('Thank you, your forayEffort data have been submitted!')
   })
   
@@ -672,24 +694,20 @@ server <- function(input, output, session) {
   # Get data:
   
   observe({
-    if(!is.null(input$hub)){
-      if(input$hub != 'noData'){
-        if(!is.null(input$siteId)){
-          if(input$siteId != 'noData'){
-            if(!is.null(input$dateForayCountUnbanded)){
-              forayCountUnbandedTable <- forayCountUnbandedMongo$find(
-                query = siteDateQuery('siteIDForayCountUnbanded', input$siteIDForayCountUnbanded,
-                                      'dateForayCountUnbanded', input$dateForayCountUnbanded),
-                fields = '{"_row" : 0, "_id" : 0}') %>%
-                mongoToTblDf
-              if(nrow(forayCountUnbandedTable) > 0){
-                tableValues$forayCountUnbanded <- forayCountUnbandedTable %>%
-                  select(one_of(fieldCodesForayCountUnbanded))
-              } else {
-                tableValues$forayCountUnbanded <- emptyDataFrame(fieldCodesForayCountUnbanded)
-              }
-            }
-          }
+    if(input$proofSwitchForayCountUnbanded == 'new'){
+      tableValues$forayCountUnbanded <- emptyDataFrame(fieldCodesForayCountUnbanded)
+    } else {
+      if(!is.null(input$hub) & !is.null(input$siteId)){
+        forayCountUnbandedMongo <- mongo('forayCountUnbandedTable', url = mongoURL)
+        forayCountUnbandedTable <- forayCountUnbandedMongo$find(
+          query = siteQuery('siteIDForayCountUnbanded', input$siteIDForayCountUnbanded),
+          fields = '{"_row" : 0, "_id" : 0}') %>%
+          mongoToTblDf
+        if(nrow(forayCountUnbandedTable) > 0){
+          tableValues$forayCountUnbanded <- forayCountUnbandedTable %>%
+            select(one_of(fieldCodesForayCountUnbanded))
+        } else {
+          tableValues$forayCountUnbanded <- emptyDataFrame(fieldCodesForayCountUnbanded)
         }
       }
     }
@@ -735,13 +753,17 @@ server <- function(input, output, session) {
   # Save data:
   
   observeEvent(input$submitForayCountUnbanded, {
-    # Remove data associated with site from database:
-    forayCountUnbandedMongo$remove(
-      siteDateQuery('siteIDForayCountUnbanded', input$siteIDForayCountUnbanded,
-                    'dateForayCountUnbanded', input$dateForayCountUnbanded), 
-      multiple = TRUE)
-    # Add data to database:
-    forayCountUnbandedMongo$insert(tableValues$forayCountUnbanded)
+    forayCountUnbandedMongo <- mongo('forayCountUnbandedTable', url = mongoURL)
+    if(input$proofSwitchForayCountUnbanded == 'new'){
+      # Add data to database:
+      forayCountUnbandedMongo$insert(tableValues$forayCountUnbanded)
+    } else {
+      # Remove data associated with site from database:
+      forayCountUnbandedMongo$remove(siteQuery('siteIDForayCountUnbanded', input$siteIDForayCountUnbanded),
+                                     multiple = TRUE)
+      # Add data to database:
+      forayCountUnbandedMongo$insert(tableValues$forayCountUnbanded)
+    }
     shinyjs::alert('Thank you, your forayCountUnbanded data have been submitted!')
   })
   
@@ -760,24 +782,20 @@ server <- function(input, output, session) {
   # Get data:
   
   observe({
-    if(!is.null(input$hub)){
-      if(input$hub != 'noData'){
-        if(!is.null(input$siteId)){
-          if(input$siteId != 'noData'){
-            if(!is.null(input$dateTechRs)){
-              techRsTable <- techRsMongo$find(
-                query = siteDateQuery('siteIDTechRs', input$siteIDTechRs,
-                                      'dateTechRs', input$dateTechRs),
-                fields = '{"_row" : 0, "_id" : 0}') %>%
-                mongoToTblDf
-              if(nrow(techRsTable) > 0){
-                tableValues$techRs <- techRsTable %>%
-                  select(one_of(fieldCodesTechRs))
-              } else {
-                tableValues$techRs <- emptyDataFrame(fieldCodesTechRs)
-              }
-            }
-          }
+    if(input$proofSwitchTechRs == 'new'){
+      tableValues$techRs <- emptyDataFrame(fieldCodesTechRs)
+    } else {
+      if(!is.null(input$hub) & !is.null(input$siteId)){
+        techRsMongo <- mongo('techRsTable', url = mongoURL)
+        techRsTable <- techRsMongo$find(
+          query = siteQuery('siteIDTechRs', input$siteIDTechRs),
+          fields = '{"_row" : 0, "_id" : 0}') %>%
+          mongoToTblDf
+        if(nrow(techRsTable) > 0){
+          tableValues$techRs <- techRsTable %>%
+            select(one_of(fieldCodesTechRs))
+        } else {
+          tableValues$techRs <- emptyDataFrame(fieldCodesTechRs)
         }
       }
     }
@@ -823,11 +841,17 @@ server <- function(input, output, session) {
   # Save data:
   
   observeEvent(input$submitTechRs, {
-    # Remove data associated with site from database:
-    techRsMongo$remove(siteDateQuery('siteIDTechRs', input$siteIDTechRs,
-                                     'dateTechRs', input$dateTechRs), multiple = TRUE)
-    # Add data to database:
-    techRsMongo$insert(tableValues$techRs)
+    techRsMongo <- mongo('techRsTable', url = mongoURL)
+    if(input$proofSwitchTechRs == 'new'){
+      # Add data to database:
+      techRsMongo$insert(tableValues$techRs)
+    } else {
+      # Remove data associated with site from database:
+      techRsMongo$remove(siteQuery('siteIDTechRs', input$siteIDTechRs),
+                         multiple = TRUE)
+      # Add data to database:
+      techRsMongo$insert(tableValues$techRs)
+    }
     shinyjs::alert('Thank you, your techRs data have been submitted!')
   })
   
@@ -846,24 +870,20 @@ server <- function(input, output, session) {
   # Get data:
   
   observe({
-    if(!is.null(input$hub)){
-      if(input$hub != 'noData'){
-        if(!is.null(input$siteId)){
-          if(input$siteId != 'noData'){
-            if(!is.null(input$datePc)){
-              pcTable <- pcMongo$find(
-                query = siteDateQuery('siteIDPc', input$siteIDPc,
-                                      'datePc', input$datePc),
-                fields = '{"_row" : 0, "_id" : 0}') %>%
-                mongoToTblDf
-              if(nrow(pcTable) > 0){
-                tableValues$pc <- pcTable %>%
-                  select(one_of(fieldCodesPc))
-              } else {
-                tableValues$pc <- emptyDataFrame(fieldCodesPc)
-              }
-            }
-          }
+    if(input$proofSwitchPc == 'new'){
+      tableValues$pc <- emptyDataFrame(fieldCodesPc)
+    } else {
+      if(!is.null(input$hub) & !is.null(input$siteId)){
+        pcMongo <- mongo('pcTable', url = mongoURL)
+        pcTable <- pcMongo$find(
+          query = siteQuery('siteIDPc', input$siteIDPc),
+          fields = '{"_row" : 0, "_id" : 0}') %>%
+          mongoToTblDf
+        if(nrow(pcTable) > 0){
+          tableValues$pc <- pcTable %>%
+            select(one_of(fieldCodesPc))
+        } else {
+          tableValues$pc <- emptyDataFrame(fieldCodesPc)
         }
       }
     }
@@ -909,11 +929,17 @@ server <- function(input, output, session) {
   # Save data:
   
   observeEvent(input$submitPc, {
-    # Remove data associated with site from database:
-    pcMongo$remove(siteDateQuery('siteIDPc', input$siteIDPc,
-                                 'datePc', input$datePc), multiple = TRUE)
-    # Add data to database:
-    pcMongo$insert(tableValues$pc)
+    pcMongo <- mongo('pcTable', url = mongoURL)
+    if(input$proofSwitchPc == 'new'){
+      # Add data to database:
+      pcMongo$insert(tableValues$pc)
+    } else {
+      # Remove data associated with site from database:
+      pcMongo$remove(siteQuery('siteIDPc', input$siteIDPc),
+                     multiple = TRUE)
+      # Add data to database:
+      pcMongo$insert(tableValues$pc)
+    }
     shinyjs::alert('Thank you, your pc data have been submitted!')
   })
   
@@ -932,8 +958,11 @@ server <- function(input, output, session) {
   # Get data:
   
   observe({
-    if(!is.null(input$siteIDPartRs)){
-      if(input$siteIDPartRs != 'noData'){
+    if(input$proofSwitchPartRs == 'new'){
+      tableValues$partRs <- emptyDataFrame(fieldCodesPartRs)
+    } else {
+      if(!is.null(input$hub) & !is.null(input$siteId)){
+        partRsMongo <- mongo('partRsTable', url = mongoURL)
         partRsTable <- partRsMongo$find(
           query = siteQuery('siteIDPartRs', input$siteIDPartRs),
           fields = '{"_row" : 0, "_id" : 0}') %>%
@@ -988,11 +1017,18 @@ server <- function(input, output, session) {
   # Save data:
   
   observeEvent(input$submitPartRs, {
-    # Remove data associated with site from database:
-    partRsMongo$remove(siteQuery('siteIDPartRs', input$siteIDPartRs), multiple = TRUE)
-    # Add data to database:
-    partRsMongo$insert(tableValues$partRs)
-    shinyjs::alert('Thank you, your partRs data have been submitted!')
+    partRsMongo <- mongo('partRsTable', url = mongoURL)
+    if(input$proofSwitchPartRs == 'new'){
+      # Add data to database:
+      partRsMongo$insert(tableValues$partRs)
+    } else {
+      # Remove data associated with site from database:
+      partRsMongo$remove(siteQuery('siteIDPartRs', input$siteIDPartRs),
+                         multiple = TRUE)
+      # Add data to database:
+      partRsMongo$insert(tableValues$partRs)
+    }
+    shinyjs::alert('Thank you, your participant resight data have been submitted!')
   })
   
   #-------------------------------------------------------------------------------*

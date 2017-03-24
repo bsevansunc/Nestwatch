@@ -197,8 +197,8 @@ shinyUI(
       column(3, textInput('siteIDVisit', 'Site ID', 'noData')),
       column(3, dateInput('dateVisit', 'Date', '2017-01-01')),
       column(3, radioButtons('proofSwitchVisit', label = '',
-                             choices = c('Enter and modify new records',
-                                         'Proof and modify existing records'))),
+                             choices = c('Enter and modify new records' = 'new',
+                                         'Proof and modify existing records' = 'proof'))),
       column(3, '')
     ),
     fluidRow(
@@ -259,9 +259,9 @@ shinyUI(
     fluidRow(
       column(3, textInput('siteIDCapture', 'Site ID', 'noData')),
       column(3, textInput('dateCapture', 'Date', 'noData')),
-      column(3, radioButtons('proofSwitchCapture', label = '',
-                             choices = c('Enter and modify new records',
-                                         'Proof and modify existing records'))),
+      column(3, radioButtons('proofSwitchCapture',  label = '',
+                             choices = c('Enter and modify new records' = 'new',
+                                         'Proof and modify existing records' = 'proof'))),
       column(3, '')
     ),
     fluidRow(
@@ -328,8 +328,8 @@ shinyUI(
       column(3, textInput('siteIDForayEffort', 'Site ID', 'noData')),
       column(3, textInput('dateForayEffort', 'Date', '2017-01-01')),
       column(3, radioButtons('proofSwitchForayEffort', label = '',
-                             choices = c('Enter and modify new records',
-                                         'Proof and modify existing records'))),
+                             choices = c('Enter and modify new records' = 'new',
+                                         'Proof and modify existing records' = 'proof'))),
       column(3, '')
     ),
     br(),
@@ -374,8 +374,8 @@ shinyUI(
       column(3, textInput('siteIDForayCountUnbanded', 'Site ID', 'noData')),
       column(3, textInput('dateForayCountUnbanded', 'Date', '2017-01-01')),
       column(3, radioButtons('proofSwitchForayCountUnbanded', label = '',
-                             choices = c('Enter and modify new records',
-                                         'Proof and modify existing records'))),
+                             choices = c('Enter and modify new records' = 'new',
+                                         'Proof and modify existing records' = 'proof'))),
       column(3, '')
     ),
     fluidRow(
@@ -419,8 +419,8 @@ shinyUI(
       column(3, textInput('siteIDTechRs', 'Site ID', 'noData')),
       column(3, textInput('dateTechRs', 'Date', 'noData')),
       column(3, radioButtons('proofSwitchTechRs', label = '',
-                             choices = c('Enter and modify new records',
-                                         'Proof and modify existing records'))),
+                             choices = c('Enter and modify new records' = 'new',
+                                         'Proof and modify existing records' = 'proof'))),
       column(3, '')
     ),
     fluidRow(
@@ -473,8 +473,8 @@ shinyUI(
       column(3, textInput('siteIDPc', 'Site ID', 'noData')),
       column(3, textInput('datePc', 'Date', 'noData')),
       column(3, radioButtons('proofSwitchPc', label = '',
-                             choices = c('Enter and modify new records',
-                                         'Proof and modify existing records'))),
+                             choices = c('Enter and modify new records' = 'new',
+                                         'Proof and modify existing records' = 'proof'))),
       column(3, '')
     ),
     fluidRow(
@@ -587,24 +587,29 @@ shinyUI(
              fluidPage(
                useShinyjs(),
                fluidRow(
-                 column(4, selectizeInput('siteIDPartRs', 'Site ID',
+                 column(3, column(3, selectInput('hub','Regional Hub:', choiceRegions,
+                                                 selected = 'noData'))),
+                 column(3, selectizeInput('siteIDPartRs', 'Site ID',
                                           choices = siteIdTable %>%
                                             arrange(siteID) %>%
                                             .$siteID %>%
                                             c('noData'),
                                           selected = 'noData')),
                  column(2, dateInput('datePartRs', 'Date', '2017-01-01')),
-                 column(4, textInput('bandNumberPartRs', 'Band number', 'noData')),
-                 column(2, '')
+                 column(3, radioButtons('proofSwitchPartRs', label = '',
+                                        choices = c('Enter and modify new records' = 'new',
+                                                    'Proof and modify existing records' = 'proof'))),
+                 column(1, '')
                ),
                fluidRow(
-                 column(2, selectizeInput('typePartRs', 'Resight type',
+                 column(4, textInput('bandNumberPartRs', 'Band number', 'noData')),
+                 column(3, selectizeInput('typePartRs', 'Resight type',
                                           choices = choiceTypePartRs,
                                           selected = 'noData')),
-                 column(10, textInput('notesPartRs', 'Notes', 'noData'))
+                 column(5, textInput('notesPartRs', 'Notes', 'noData'))
                ),
                br(),
-               fluidRow(column(6, ''),
+               fluidRow(column(9, ''),
                         column(3, actionButton('addRecordPartRs', 
                                                'Add record to table',
                                                class = 'btn-primary'))),
