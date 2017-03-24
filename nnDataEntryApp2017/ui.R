@@ -61,8 +61,7 @@ shinyUI(
       fluidPage(
         useShinyjs(),
         fluidRow(
-               column(3, selectInput('hub','Regional Hub:', choiceRegions,
-                                     selected = 'noData')),
+               column(3, selectInput('hub','Regional Hub:', choiceRegions)),
                column(3, selectInput('inputType', 'New or existing site:',
                                      c('Existing site', 'New site'))),
                column(4, uiOutput('uiSite')),
@@ -78,17 +77,17 @@ shinyUI(
     h4(strong('Site contact information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteIDContact', 'Site ID', 'noData')),
-      column(3, textInput('groupNameContact', 'Group name', 'noData')),
-      column(3, textInput('lastNameContact' ,'Last name', 'noData')),
-      column(3, textInput('firstNameContact', 'First name', 'noData'))
+      column(3, textInput('siteIDContact', 'Site ID')),
+      column(3, textInput('groupNameContact', 'Group name')),
+      column(3, textInput('lastNameContact' ,'Last name')),
+      column(3, textInput('firstNameContact', 'First name'))
     ),
     br(),
     fluidRow(
-      column(2, textInput('phone1Contact', 'Primary phone', 'noData')),
-      column(2, textInput('phone2Contact' ,'Secondary phone', 'noData')),
-      column(3, textInput('email1Contact', 'Email', 'noData')),
-      column(5, textInput('notesContact', 'Contact notes', 'noData'))
+      column(2, textInput('phone1Contact', 'Primary phone')),
+      column(2, textInput('phone2Contact' ,'Secondary phone')),
+      column(3, textInput('email1Contact', 'Email')),
+      column(5, textInput('notesContact', 'Contact notes'))
     ),
     br(),
     fluidRow(column(6, ''),
@@ -116,16 +115,16 @@ shinyUI(
     h4(strong('Site address information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteIDAddress', 'Site ID', 'noData')),
-      column(2, textInput('houseNumberAddress', 'House number', 'noData')),
-      column(2, textInput('streetAddress' ,'Street', 'noData')),
-      column(2, textInput('cityAddress', 'City', 'noData')),
-      column(1, textInput('stateAddress', 'State', 'noData')),
-      column(2, textInput('zipAddress', 'Zip code', 'noData'))
+      column(3, textInput('siteIDAddress', 'Site ID')),
+      column(2, textInput('houseNumberAddress', 'House number')),
+      column(2, textInput('streetAddress' ,'Street')),
+      column(2, textInput('cityAddress', 'City')),
+      column(1, textInput('stateAddress', 'State')),
+      column(2, textInput('zipAddress', 'Zip code'))
     ),
     br(),
     fluidRow(
-      column(11, textInput('notesAddress', 'Address notes', 'noData')),
+      column(11, textInput('notesAddress', 'Address notes')),
       column(1, '')
     ),
     br(),
@@ -154,19 +153,18 @@ shinyUI(
     h4(strong('Site location information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteIDLocation', 'Site ID', 'noData')),
-      column(2, dateInput('dateLocation', 'Date', '2017-01-01')),
-      column(2, numericInput('longLocation' ,'Longitude', 99999)),
-      column(2, numericInput('latLocation', 'Latitude', 99999)),
-      column(1, numericInput('accuracyLocation', 'Accuracy', 99999)),
+      column(3, textInput('siteIDLocation', 'Site ID')),
+      column(2, dateInput('dateLocation', 'Date')),
+      column(2, numericInput('longLocation' ,'Longitude', NA)),
+      column(2, numericInput('latLocation', 'Latitude', NA)),
+      column(1, numericInput('accuracyLocation', 'Accuracy', NA)),
       column(2, selectizeInput('locationMethodLocation',
                                'Location method', 
-                               choices = choiceLocationMethod,
-                               selected = 'noData'))
+                               choices = choiceLocationMethod))
     ),
     br(),
     fluidRow(
-      column(12, textInput('notesLocation', 'Location notes', 'noData'))
+      column(12, textInput('notesLocation', 'Location notes'))
     ),
     br(),
     fluidRow(column(6, ''),
@@ -194,25 +192,23 @@ shinyUI(
     h4(strong('Site visit information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteIDVisit', 'Site ID', 'noData')),
-      column(3, dateInput('dateVisit', 'Date', '2017-01-01')),
+      column(3, textInput('siteIDVisit', 'Site ID')),
+      column(3, dateInput('dateVisit', 'Date')),
       column(3, radioButtons('proofSwitchVisit', label = '',
                              choices = c('Enter and modify new records' = 'new',
                                          'Proof and modify existing records' = 'proof'))),
       column(3, '')
     ),
     fluidRow(
-      column(2, textInput('observerVisit' ,'Observer(s)', 'noData')),
+      column(2, textInput('observerVisit' ,'Observer(s)')),
       column(5, selectizeInput('participantEngagementVisit',
                                'Participant Engagement',
-                               choices = choiceParticipantEngagement,
-                               selected = 'noData')),
+                               choices = choiceParticipantEngagement)),
       column(5, '')
     ),
     fluidRow(
       column(2, selectizeInput('encounteredBirdsVisit', 'Encountered birds',
-                               choices = choiceEncounteredBirds,
-                               selected = 'noData')),
+                               choices = choiceEncounteredBirds)),
       column(2, numericInput('netMinutes6Visit', 
                              '6 m nets', 
                              0)),
@@ -229,7 +225,7 @@ shinyUI(
     ),
     br(),
     fluidRow(
-      column(12, textInput('notesVisit', 'Visit notes', 'noData'))
+      column(12, textInput('notesVisit', 'Visit notes'))
     ),
     br(),
     fluidRow(column(6, ''),
@@ -257,8 +253,8 @@ shinyUI(
     h4(strong('Capture information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteIDCapture', 'Site ID', 'noData')),
-      column(3, textInput('dateCapture', 'Date', 'noData')),
+      column(3, textInput('siteIDCapture', 'Site ID')),
+      column(3, textInput('dateCapture', 'Date')),
       column(3, radioButtons('proofSwitchCapture',  label = '',
                              choices = c('Enter and modify new records' = 'new',
                                          'Proof and modify existing records' = 'proof'))),
@@ -266,38 +262,30 @@ shinyUI(
     ),
     fluidRow(
       column(2, selectizeInput('timeCapture', 'Time',
-                               choices = choiceTimeOfDay,
-                               selected = '00:01')),
-      column(1, textInput('obsCapture', 'Observer', 'noData')),
+                               choices = choiceTimeOfDay)),
+      column(1, textInput('obsCapture', 'Observer')),
       column(1, selectizeInput('encCapture', 'Encounter',
-                               choices = choiceEnc,
-                               selected = 'noData')),
+                               choices = choiceEnc)),
       column(2, selectizeInput('sppCapture', 'SPP',
-                               choices = choiceSpecies,
-                               selected = 'noData')),
-      column(3, textInput('bandNumberCapture', 'Band number', 'noData')),
+                               choices = choiceSpecies)),
+      column(3, textInput('bandNumberCapture', 'Band number')),
       column(3, selectizeInput('colorComboCapture', 'Color combo',
-                               choices = choiceColors,
-                               selected = 'noData'))
+                               choices = choiceColors))
     ),
     fluidRow(
-      column(2, numericInput('massCapture', 'Mass', 99999)),
-      column(2, numericInput('wingCapture', 'Wing', 99999)),
-      column(2, numericInput('tlCapture', 'Tail', 99999)),
-      column(2, selectizeInput('ageCapture', 'Age', choices = choiceAge,
-                               selected = 'noData')),
-      column(1, selectizeInput('sexCapture', 'Sex', choices = choiceSex,
-                               selected = 'noData')),
+      column(2, numericInput('massCapture', 'Mass', NA)),
+      column(2, numericInput('wingCapture', 'Wing', NA)),
+      column(2, numericInput('tlCapture', 'Tail', NA)),
+      column(2, selectizeInput('ageCapture', 'Age', choices = choiceAge)),
+      column(1, selectizeInput('sexCapture', 'Sex', choices = choiceSex)),
       column(1, selectizeInput('cpBpCapture', 'CP/BP',
-                               choices = choiceBreedingCond,
-                               selected = 'noData')),
-      column(1, selectizeInput('fatCapture', 'Fat', choices = choiceFat,
-                               selected = 'noData'))
+                               choices = choiceBreedingCond)),
+      column(1, selectizeInput('fatCapture', 'Fat', choices = choiceFat))
     ),
     fluidRow(
-      column(2, textInput('bloodIDCapture', 'Blood sample ID', 'noData')),
-      column(2, textInput('featherIDCapture', 'Feather sample ID', 'noData')),
-      column(8, textInput('notesCapture', 'Capture notes', 'noData'))
+      column(2, textInput('bloodIDCapture', 'Blood sample ID')),
+      column(2, textInput('featherIDCapture', 'Feather sample ID')),
+      column(8, textInput('notesCapture', 'Capture notes'))
     ),
     br(),
     fluidRow(column(6, ''),
@@ -325,8 +313,8 @@ shinyUI(
     h4(strong('Resight foray information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteIDForayEffort', 'Site ID', 'noData')),
-      column(3, textInput('dateForayEffort', 'Date', '2017-01-01')),
+      column(3, textInput('siteIDForayEffort', 'Site ID')),
+      column(3, textInput('dateForayEffort', 'Date')),
       column(3, radioButtons('proofSwitchForayEffort', label = '',
                              choices = c('Enter and modify new records' = 'new',
                                          'Proof and modify existing records' = 'proof'))),
@@ -334,15 +322,13 @@ shinyUI(
     ),
     br(),
     fluidRow(
-      column(2, textInput('observerForayEffort', 'Observer', 'noData')),
+      column(2, textInput('observerForayEffort', 'Observer')),
       column(2, numericInput('numberForayEffort', 'Foray number', 1)),
       column(2, selectizeInput('startTimeForayEffort', 'Start time',
-                               choices = choiceTimeOfDay,
-                               selected = '00:01')),
+                               choices = choiceTimeOfDay)),
       column(2, selectizeInput('endTimeForayEffort', 'End time',
-                               choices = choiceTimeOfDay,
-                               selected = '00:01')),
-      column(2, numericInput('pathDistanceForayEffort', 'Path distance (m)', 99999)),
+                               choices = choiceTimeOfDay)),
+      column(2, numericInput('pathDistanceForayEffort', 'Path distance (m)', NA)),
       column(2, '')
     ),
     br(),
@@ -371,8 +357,8 @@ shinyUI(
     h4(strong('Unbanded focal birds observed while on foray:')),
     br(),
     fluidRow(
-      column(3, textInput('siteIDForayCountUnbanded', 'Site ID', 'noData')),
-      column(3, textInput('dateForayCountUnbanded', 'Date', '2017-01-01')),
+      column(3, textInput('siteIDForayCountUnbanded', 'Site ID')),
+      column(3, textInput('dateForayCountUnbanded', 'Date')),
       column(3, radioButtons('proofSwitchForayCountUnbanded', label = '',
                              choices = c('Enter and modify new records' = 'new',
                                          'Proof and modify existing records' = 'proof'))),
@@ -380,9 +366,8 @@ shinyUI(
     ),
     fluidRow(
       column(2, selectizeInput('sppForayCountUnbanded', 'Species',
-                               choices = choiceSpecies,
-                               selected = 'noData')),
-      column(2, numericInput('countForayCountUnbanded', 'Count', 0)),
+                               choices = choiceSpecies)),
+      column(2, numericInput('countForayCountUnbanded', 'Count', NA)),
       column(8, '')  
     ),
     br(),
@@ -416,28 +401,26 @@ shinyUI(
     h4(strong('Resighted birds during the visit:')),
     br(),
     fluidRow(
-      column(3, textInput('siteIDTechRs', 'Site ID', 'noData')),
-      column(3, textInput('dateTechRs', 'Date', 'noData')),
+      column(3, textInput('siteIDTechRs', 'Site ID')),
+      column(3, textInput('dateTechRs', 'Date')),
       column(3, radioButtons('proofSwitchTechRs', label = '',
                              choices = c('Enter and modify new records' = 'new',
                                          'Proof and modify existing records' = 'proof'))),
       column(3, '')
     ),
     fluidRow(
-      column(1, textInput('observerTechRs', 'Observer', 'noData')),
+      column(1, textInput('observerTechRs', 'Observer')),
       column(2, selectizeInput('timeTechRs', 'Time',
-                               choices = choiceTimeOfDay,
-                               selected = '00:01')),
-      column(2, textInput('forayNumberTechRs', 'Foray number', 'noData')),
-      column(2, textInput('bandNumberTechRs', 'Band number', 'noData')),
-      column(2, numericInput('longTechRs', 'Longitude (-dd.dddd)', 99999)),
-      column(2, numericInput('latTechRs', 'Latitude (dd.dddd)', 99999)),
+                               choices = choiceTimeOfDay)),
+      column(2, textInput('forayNumberTechRs', 'Foray number')),
+      column(2, textInput('bandNumberTechRs', 'Band number')),
+      column(2, numericInput('longTechRs', 'Longitude (-dd.dddd)', NA)),
+      column(2, numericInput('latTechRs', 'Latitude (dd.dddd)', NA)),
       column(1, selectizeInput('typeTechRs', 'Resight type',
-                               choices = choiceTypeTechRs,
-                               selected = 'noData'))
+                               choices = choiceTypeTechRs))
     ),
     fluidRow(
-      column(12, textInput('notesTechRs', 'Notes', 'noData'))
+      column(12, textInput('notesTechRs', 'Notes'))
       ),
     br(),
     fluidRow(column(6, ''),
@@ -470,18 +453,17 @@ shinyUI(
     h4(strong('Point count information:')),
     br(),
     fluidRow(
-      column(3, textInput('siteIDPc', 'Site ID', 'noData')),
-      column(3, textInput('datePc', 'Date', 'noData')),
+      column(3, textInput('siteIDPc', 'Site ID')),
+      column(3, textInput('datePc', 'Date')),
       column(3, radioButtons('proofSwitchPc', label = '',
                              choices = c('Enter and modify new records' = 'new',
                                          'Proof and modify existing records' = 'proof'))),
       column(3, '')
     ),
     fluidRow(
-      column(2, textInput('observerPc', 'Observer', 'noData')),
+      column(2, textInput('observerPc', 'Observer')),
       column(3, selectizeInput('startTimePc', 'Start time',
-                               choices = choiceTimeOfDay,
-                               selected = '00:01')),
+                               choices = choiceTimeOfDay)),
       column(7, '')
     ),
     fluidRow(
@@ -489,16 +471,14 @@ shinyUI(
                                choices = choiceInterval,
                                selected = 1)),
       column(2, selectizeInput('sppPc', 'Species',
-                               choices = choiceSpecies,
-                               selected = 'noData')),
+                               choices = choiceSpecies)),
       column(1, numericInput('count10Pc', 'DIST < 10', 0)),
       column(1, numericInput('count20Pc', 'DIST 10 - 20', 0)),
       column(1, numericInput('count30Pc', 'DIST 20 - 30', 0)),
       column(1, numericInput('count40Pc', 'DIST 30 - 40', 0)),
       column(1, numericInput('count50Pc', 'DIST 50 - 50', 0)),
       column(2, selectizeInput('detectionPc', 'Detection',
-                               choices = choiceDetection,
-                               selected = 'noData'))
+                               choices = choiceDetection))
     ),
     br(),
     fluidRow(column(6, ''),
@@ -587,15 +567,12 @@ shinyUI(
              fluidPage(
                useShinyjs(),
                fluidRow(
-                 column(3, column(3, selectInput('hub','Regional Hub:', choiceRegions,
-                                                 selected = 'noData'))),
+                 column(3, column(3, selectInput('hub','Regional Hub:', choiceRegions))),
                  column(3, selectizeInput('siteIDPartRs', 'Site ID',
                                           choices = siteIdTable %>%
                                             arrange(siteID) %>%
-                                            .$siteID %>%
-                                            c('noData'),
-                                          selected = 'noData')),
-                 column(2, dateInput('datePartRs', 'Date', '2017-01-01')),
+                                            .$siteID)),
+                 column(2, dateInput('datePartRs', 'Date')),
                  column(3, radioButtons('proofSwitchPartRs', label = '',
                                         choices = c('Enter and modify new records' = 'new',
                                                     'Proof and modify existing records' = 'proof'))),
