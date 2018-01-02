@@ -2,6 +2,16 @@
 # ---- SET-UP ----
 #=================================================================================*
 
+library(shiny)
+library(stringr)
+library(readr)
+library(mongolite)
+library(tidyr)
+library(dplyr)
+library(lubridate)
+library(shinyjs)
+library(DT)
+
 # Sources used:
 
 # Form input: http://deanattali.com/2015/06/14/mimicking-google-form-shiny/
@@ -31,11 +41,48 @@ smartInstallAndLoad <- function(packageVector){
   lapply(packageVector, library, character.only = TRUE)
 }
 
+# No strings as factors!
+
+options(stringsAsFactors = FALSE)
+
 # Load and potentially install libraries:
 
 smartInstallAndLoad(c('markdown', 'tidyverse', 'stringr',
                       'lubridate', 'shiny', 'shinyBS',
                       'R.utils', 'DT', 'shinyjs', 'mongolite'))
+
+# Function to read then tibble:
+
+readTbl <- function(x) read.csv(x) %>% tbl_df
+
+# Function to put data in mongo:
+
+mongoInsert <- function(inTable, mongoTable){
+  connectionMongo <- mongo(mongoTable, url = mongoURL)
+  connectionMongo$insert(inTable)
+}
+
+# Function to delete then insert a table:
+
+mongoDeleteThenInsert <- function(inTable, mongoTable){
+  connectionMongo <- mongo(mongoTable, url = mongoURL)
+  connectionMongo$remove()
+  connectionMongo$insert(inTable)
+}
+
+mongoURL <- "mongodb://bsevans:33shazam@ds025232.mlab.com:25232/nndataentry"
+
+# Function to turn NA to 'noData':
+
+naToNoData <- function(x) ifelse(is.na(x), 'noData', x)
+
+# Function to change names to those of the field codes:
+
+namesToFieldCodes <- function(inData, fieldCodes){
+  data <- readTbl(inData)
+  names(data) <- fieldCodes
+  return(data)
+}
 
 #---------------------------------------------------------------------------------*
 # ---- Source functions ----
@@ -83,7 +130,8 @@ getAllPossibleCombos <- function(colorValues){
     distinct %>%
     arrange(colorL, colorR) %>%
     transmute(colorCombo = paste(colorL, colorR, sep = ',')) %>%
-    .$colorCombo %>% c('noData')
+    .$colorCombo
+  return(colorCombos)
 }
 
 # Entries for drop-down menu items:

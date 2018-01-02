@@ -1,26 +1,90 @@
 #---------------------------------------------------------------------------------*
-# ---- SITE ID TABLE ----
+# ---- GET DATA FROM MONGO ----
 #---------------------------------------------------------------------------------*
 
-siteIdTable <- read.csv('startData/siteIdTable.csv') %>%
-  tbl_df
+options(stringsAsFactors = FALSE)
+
+# Get fixed mongo data:
+
+mongoURL <- 'mongodb://bsevans:33shazam@ds025232.mlab.com:25232/nndataentry'
+
+# All possible AOU codes (for point counts):
+
+aouCodes <- mongoToTblDf(
+  mongo('aou_codes', url = mongoURL)$find()
+)
+
+justAlphaCode <- aouCodes %>% .$Alpha
+
+
+siteIdTable <- mongo('siteIdTable', url = mongoURL)$find()
 
 fieldCodesSiteId <- names(siteIdTable)
 
 fieldNamesSiteId <- c('siteID', 'Region')
 
+fieldCodesTable <- mongo('fieldNameFrame', url = mongoURL)$find()
+
 # Choices of NN regions:
 
-choiceRegions <- c('noData','Atlanta','Colorado', 'DC', 'Gainesville', 'Pittsburgh',
+choiceRegions <- c('','Atlanta','Colorado', 'DC', 'Gainesville', 'Pittsburgh',
                    'Raleigh', 'Springfield')
 
 names(choiceRegions) <- choiceRegions
+
+# Load tables used:
+
+fieldCodesContactInfo <- fieldCodesTable %>%
+  filter(dTable == 'contactNames') %>%
+  .$names
+
+fieldCodesAddress <- fieldCodesTable %>%
+  filter(dTable == 'addressNames') %>%
+  .$names
+
+fieldCodesLocation <- fieldCodesTable %>%
+  filter(dTable == 'locationNames') %>%
+  .$names
+
+fieldCodesVisit <- fieldCodesTable %>%
+  filter(dTable == 'visitNames') %>%
+  .$names
+
+fieldCodesCapture <- fieldCodesTable %>%
+  filter(dTable == 'captureNames') %>%
+  .$names
+
+fieldCodesForayEffort <- fieldCodesTable %>%
+  filter(dTable == 'forayEffortNames') %>%
+  .$names
+
+fieldCodesForayCountUnbanded <- fieldCodesTable %>%
+  filter(dTable == 'forayCountUnbandedNames') %>%
+  .$names
+
+fieldCodesTechRs <- fieldCodesTable %>%
+  filter(dTable == 'techRsNames') %>%
+  .$names
+
+fieldCodesPc <- fieldCodesTable %>%
+  filter(dTable == 'pcNames') %>%
+  .$names
+
+#---------------------------------------------------------------------------------*
+# ---- SITE ID TABLE ----
+#---------------------------------------------------------------------------------*
+
+
 
 #---------------------------------------------------------------------------------*
 # ---- CONTACT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesContactInfo <- read.csv('startData/contactNames.csv')$names
+# fieldCodesContactInfo <- readTbl('startData/contactNames.csv') %>%
+#   # mutate(names = str_replace_all(names, 'Contact', '')) %>%
+#   .$names
+
+blankFieldsContactInfo <- fieldCodesContactInfo[-1]
 
 fieldNamesContactInfo <- fieldNamesSite <- c(
   'siteID', 'School or group name', 'Last name', 'First name', 'Primary phone',
@@ -30,7 +94,9 @@ fieldNamesContactInfo <- fieldNamesSite <- c(
 # ---- ADDRESS TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesAddress <- read.csv('startData/addressNames.csv')$names
+# fieldCodesAddress <- read.csv('startData/addressNames.csv')$names
+
+blankFieldsAddress <- fieldCodesAddress[-1]
 
 fieldNamesAddress <- fieldNamesSite <- c(
   'siteID', 'House number', 'Street', 'City', 'State',
@@ -40,33 +106,37 @@ fieldNamesAddress <- fieldNamesSite <- c(
 # ---- LOCATION TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesLocation <- read.csv('startData/siteLocationNames.csv')$names
+# fieldCodesLocation <- read.csv('startData/locationNames.csv')$names
+
+blankFieldsLocation <- fieldCodesLocation[-c(1,2)]
 
 fieldNamesLocation <- c('siteID', 'Date', 'Longitude', 'Latitude', 'Accuracy',
                         'Location method', 'Location notes')
 
-choiceDate <- c('noData', seq(
+choiceDate <- c('', seq(
   as.Date(ISOdate(2000, 1, 15)),
   as.Date(ISOdate(2030, 1, 1)), 1) %>%
     as.character)
 
-choiceLocationMethod <- c('noData', 'GPS', 'map')
+choiceLocationMethod <- c('', 'GPS', 'map', 'U')
 
 #---------------------------------------------------------------------------------*
 # ---- VISIT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesVisit <- read.csv('startData/visitNames.csv')$names
+# fieldCodesVisit <- read.csv('./startData/visitNames.csv')$names
+
+blankFieldsVisit <- fieldCodesVisit[-c(1,2)]
 
 fieldNamesVisit <- c('siteID', 'Date', 'Observer(s)', 'Participant engagement',
                      'Encountered birds', 'Net hours', 'Visit notes')
 
-choiceNetMinutes <- c('noData', 0:2000)
+choiceNetMinutes <- c('', 0:2000)
 
-choiceParticipantEngagement <- c('noData', '-', 0:5)
+choiceParticipantEngagement <- c('', '-', 0:5)
 
 names(choiceParticipantEngagement) <- c(
-  'noData',
+  '',
   'No visit was scheduled',
   'Participant should be avoided in the future',
   'Participant was not present or showed no interest during visit activities',
@@ -76,15 +146,17 @@ names(choiceParticipantEngagement) <- c(
   'Participant contributed during all visit activities'
 )
 
-choiceEncounteredBirds <- c('noData', 'Yes', 'No')
+choiceEncounteredBirds <- c('', 'Y', 'N')
 
 #---------------------------------------------------------------------------------*
 # ---- CAPTURE TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesCaptureTable <- read.csv('startData/captureNames.csv')$names
+# fieldCodesCapture <- read.csv('./startData/captureNames.csv')$names
 
-fieldNamesCaptureTable <- c(
+blankFieldsCapture <- fieldCodesCapture[-c(1,2,4)]
+
+fieldNamesCapture <- c(
   'siteID', 'Date', 'Time', 'Obs','ENC', 'SPP', 'Band #',
   'Color combo', 'Mass','Wing', 'Tail', 'Age', 'Sex', 'CP/BP', 'FAT',
   'Blood ID', 'Feather ID', 'Notes'
@@ -99,70 +171,82 @@ timeOfDay <- data.frame(
   slice(301:1321) %>%
   .$time
 
-choiceTimeOfDay <- c('noData',timeOfDay)
+choiceTimeOfDay <- c('',timeOfDay)
 
-choiceEnc <- c('noData','R', 'B')
+choiceEnc <- c('','R', 'B')
 
-choiceSpecies <- c('noData',aouCodes$Alpha)
+choiceSpecies <- c('',aouCodes$Alpha)
 
 colorValues <- c('B', 'N', 'K', 'G', 'E', 'O', 'P', 'M', 'R', 'Y', 'W')
 
-choiceColors <- getAllPossibleCombos(colorValues)
+choiceColors <- c('', getAllPossibleCombos(colorValues))
 
-choiceAge <- c('noData', 'HY', 'AHY', 'SY', 'ASY', 'UNK')
+choiceAge <- c('', 'HY', 'AHY', 'SY', 'ASY', 'U')
 
-choiceSex <- c('noData', 'M', 'F', 'UNK')
+choiceSex <- c('', 'M', 'F', 'U')
 
-choiceBreedingCond <-  c('noData','CP', 'BP')
+choiceBreedingCond <-  c('','CP', 'BP')
 
-choiceFat <- c('noData', 0, 0.5, seq(1:5))
+choiceFat <- c('', 0, 0.5, seq(1:5))
 
 #---------------------------------------------------------------------------------*
 # ---- RESIGHT FORAY EFFORT TABLE ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesForayEffort <- read.csv('startData/forayEffortNames.csv')$names
+# fieldCodesForayEffort <- read.csv('./startData/forayEffortNames.csv')$names
+
+blankFieldsForayEffort <- fieldCodesForayEffort[-c(1,2,3)]
 
 fieldNamesForayEffort <- c(
-  'siteID', 'Date', 'Obs', 'Foray start', 'Foray end', 'Path distance (m)',
-  'spp unbanded', 'Count unbanded'
+  'siteID', 'Date', 'Obs','Foray #', 'Foray start', 'Foray end', 'Path distance (m)'
 )
 
-choicePathDistance <- c('noData', 0:10000)
+choicePathDistance <- c('', 0:10000)
 
 #---------------------------------------------------------------------------------*
 # ---- RESIGHT FORAY COUNT UNBANDED TABLE ----
 #---------------------------------------------------------------------------------*
 
-forayCountUnbandedNames <- read.csv('startData/forayCountUnbandedNames.csv')$names
+# fieldCodesForayCountUnbanded <- read.csv('./startData/forayCountUnbandedNames.csv')$names
 
+blankFieldsForayCountUnbanded <- fieldCodesForayCountUnbanded[-c(1,2)]
 
-choiceCountUnbanded <- c('noData',  0:100)
+fieldNamesForayCountUnbanded <- c('siteID', 'Date', 'spp', 'Count')
+
+choiceCountUnbanded <- c('',  0:100)
 
 #---------------------------------------------------------------------------------*
 # ---- RESIGHT TECHNICIAN TABLE ----
 #---------------------------------------------------------------------------------*
 
-techRsNames <- read.csv('startData/techRsNames.csv')$names
+# fieldCodesTechRs <- read.csv('startData/techRsNames.csv')$names
 
-choiceTypeRs <- c('noData', 'I', 'F')
+blankFieldsTechRs <- fieldCodesTechRs[-c(1,2)]
 
+fieldNamesTechRs <- c('siteID', 'Date', 'Obs', 'Time', 'Foray #', 'Band #',
+                      'Longitude', 'Latitude', 'rsType', 'Notes')
 
+choiceTypeTechRs <- c('', 'I', 'F', 'P')
 
 #---------------------------------------------------------------------------------*
 # ---- POINT COUNTS ----
 #---------------------------------------------------------------------------------*
 
-fieldCodesPc <- read.csv('startData/pcNames.csv')$names
+# fieldCodesPc <- read.csv('startData/pcNames.csv')$names
+
+blankFieldsPc <- fieldCodesPc[-c(1:5, 7:11)]
+
+zeroFieldsPc <- fieldCodesPc[-c(1:6, 12)]
 
 fieldNamesPc <- c(
   'siteID','Date', 'Obs', 'Start time', 'Interval', 'SPP',
-  'D0-10', 'D10-20', 'D20-30', 'D30-40', 'D40-50'
+  'D0-10', 'D10-20', 'D20-30', 'D30-40', 'D40-50',
+  'Detection'
 )
 
-choiceInterval <- c('noData', 1:3)
+choiceInterval <- c('', 1:3)
 
-choiceDetection <- c('noData', 'V', 'A', 'B')
+choiceDetection <- c('', 'V', 'A', 'B')
 
 # Define field names for point count data table:
 
@@ -173,4 +257,18 @@ choiceDetection <- c('noData', 'V', 'A', 'B')
 # names(emptyDfPc) <- fieldNamesPc
 
 # blankFieldsPc <- c('distancePc','countPc', 'detectionPc','notesPc')
+
+#---------------------------------------------------------------------------------*
+# ---- PARTICIPANT RESIGHTS ----
+#---------------------------------------------------------------------------------*
+
+fieldCodesPartRs <- c('siteIDPartRs', 'datePartRs',
+                      'bandNumberPartRs', 'typePartRs', 'notesPartRs')
+
+blankFieldsPartRs <- fieldCodesPartRs[-1]
+
+choiceTypePartRs <- c('', 'P', 'N', 'D')
+
+fieldNamesPartRs <- c('siteID', 'Date', 'Band #','rsType', 'Notes')
+
 
