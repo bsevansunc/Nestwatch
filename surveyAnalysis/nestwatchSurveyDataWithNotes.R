@@ -11,14 +11,29 @@ select <- dplyr::select
 
 options(stringsAsFactors = FALSE)
 
+
+# Function for string detection and replacement across multiple values:
+
+multi_strDetectRecode <-
+  function(x, searchStringAndRecode, otherValue = NA) {
+    x <- str_trim(x)
+    for (j in 1:length(names(searchStringAndRecode))) {
+      x <- ifelse(str_detect(x, names(searchStringAndRecode)[j]),
+                  searchStringAndRecode[j], x)
+    }
+    x <- ifelse(!(x %in% searchStringAndRecode), otherValue, x)
+    return(x)
+  }
+
 #----------------------------------------------------------------------------------------*
-# ---- Get and clean data ----
+# ---- get and clean data ----
 #----------------------------------------------------------------------------------------*
 
 # Load data and fixing responseID column name:
 
 rawData <- read_csv('nestwatchSurveyRaw.csv') %>%
-  rename(responseID = `Response ID`)
+  rename(responseID = `Response ID`) %>%
+  filter(!responseID %in% c(1,2,4,6))
 
 # Get rid of bad characters in column names:
 
@@ -30,55 +45,42 @@ names(rawData) <- str_replace_all(names(rawData), '\\?', '') %>%
 responseIdTable <- rawData %>%
   transmute(
     responseID  = responseID,
-    dateSubmitted = `Date Submitted`,
+    dateSubmitted = `Date Submitted` %>%
+      as.Date('%m/%d/%Y'),
     ipAddress = `IP Address`,
     longitude = Longitude,
     latitude = Latitude,
     city = City,
     state = `State/Region`,
-    zip = Postal
-    ) %>%
-  separate(
-    dateSubmitted,
-    into = c('dateSubmitted', 'timeSubmitted'),
-    sep = ' '
+    Postal = as.character(Postal),
+    zip = case_when(str_count(Postal) == 4 ~ paste0('0', Postal),
+                    TRUE ~ Postal)
   ) %>%
-  mutate(
-    dateSubmitted = as.Date(dateSubmitted, '%m/%d/%Y'),
-    zip = ifelse(str_count(zip) == 4,
-                 paste0('0', zip),
-                 zip)
-    )
+  separate(dateSubmitted,
+           into = c('dateSubmitted', 'timeSubmitted'),
+           sep = ' ')
 
 #========================================================================================*
 # ---- question wrangling ----
 #========================================================================================*
 
-#----------------------------------------------------------------------------------------*
-# ---- question 1 ----
-#----------------------------------------------------------------------------------------*
-
-# Generate table of proportion of total yard area managed for wildlife:
+# Q1: table of proportion of total yard area managed for wildlife ----
 
 q1 <- rawData %>%
   select(responseID, propYardManaged = 22) %>%
-  mutate(
-    propYardManaged = str_trim(propYardManaged),
-    propYardManaged = case_when(
-      str_detect(propYardManaged, 'None') ~ 'none',
-      str_detect(propYardManaged, 'less than a tenth') ~ '<10',
-      str_detect(propYardManaged, 'between a tenth') ~ '11-25',
-      str_detect(propYardManaged, 'between a quarter') ~ '26-50',
-      str_detect(propYardManaged, 'half and three') ~ '51-75',
-      str_detect(propYardManaged, 'More than') ~ '>75'
-    )
-  )
+  mutate(propYardManaged = propYardManaged %>%
+           multi_strDetectRecode(
+             c(
+               'None' = 'none',
+               'less than a tenth' = '<10',
+               'between a tenth' = '11-25',
+               'between a quarter' = '26-50',
+               'half and three' = '51-75',
+               'More than' = '>75'
+             )
+           ))
 
-#----------------------------------------------------------------------------------------*
-# ---- question 2 ----
-#----------------------------------------------------------------------------------------*
-
-# Generate longform table of bird friendly features and number of features in yards:
+# Q2: longform table of bird friendly features and # of features in yards ----
 
 q2 <- rawData %>%
   select(c(1, 23:28)) %>%
@@ -86,143 +88,131 @@ q2 <- rawData %>%
          value = number,
          2:7) %>%
   mutate(
-    object = case_when(
-      str_detect(object, 'Wildlife pond') ~ 'pond',
-      str_detect(object, 'Bird bath') ~ 'birdBath',
-      str_detect(object, 'Brush pile') ~ 'brushPile',
-      str_detect(object, 'Nestbox') ~ 'nestbox',
-      str_detect(object, 'Trees or bushes') ~ 'berryProducingTrees',
-      str_detect(object, 'Bird feeder') ~ 'birdFeeder'
-    ),
+    object = object %>%
+      multi_strDetectRecode(
+        c(
+          'Wildlife pond' = 'pond',
+          'Bird bath' = 'birdBath',
+          'Brush pile' = 'brushPile',
+          'Nestbox' = 'nestbox',
+          'Trees or bushes' = 'berryProducingTrees',
+          'Bird feeder' = 'birdFeeder'
+        )
+      ),
     number = ifelse(str_detect(number, '5 or more'), '5', number)
   )
   
-#----------------------------------------------------------------------------------------*
-# ---- questions 3 and 4 ----
-#----------------------------------------------------------------------------------------*
-
-# Generate table of when participants feed birds and how regularly they feed birds:
+# Q3,4: table of when and how regularly participants feed birds ----
 
 q3to4 <- rawData %>%
   select(1, whenFeedBirds = 29,  howOftenFeedBirds = 30) %>%
   mutate(
-    whenFeedBirds = factor(whenFeedBirds),
-    howOftenFeedBirds = factor(howOftenFeedBirds)
+    whenFeedBirds = whenFeedBirds %>%
+      multi_strDetectRecode(
+        c(
+          'Only in winter' = 'winterOnly',
+          'All year' = 'allYear',
+          'Only in summer' = 'summerOnly',
+          'Never' = 'never'
+        )
+      ),
+    howOftenFeedBirds = howOftenFeedBirds %>%
+      multi_strDetectRecode(
+        c(
+          'Every day' = 'everyday',
+          'A few days per week' = 'aFewDaysPerWeek',
+          'Every 2-3 weeks' = 'everyTwoToThreeWeeks',
+          'Most days every week' = 'mostDaysPerWeek',
+          'One day per week' = 'oneDayPerWeek'
+        )
+      )
   )
-  # mutate(
-  #   whenFeedBirds = whenFeedBirds %>%
-  #     str_replace_all('Only in winter', 'winterOnly') %>%
-  #     str_replace_all('All year', 'allYear') %>%
-  #     str_replace_all('Only in summer', 'summerOnly') %>%
-  #     str_replace_all('Never', 'never'),
-  #   howOftenFeedBirds = howOftenFeedBirds %>%
-  #     str_replace_all('Every day', 'everyday') %>%
-  #     str_replace_all('A few days per week', 'aFewDaysPerWeek') %>%
-  #     str_replace_all('Every 2-3 weeks', 'everyTwoToThreeWeeks') %>%
-  #     str_replace_all('Most days every week', 'mostDaysPerWeek') %>%
-  #     str_replace_all('One day per week', 'oneDayPerWeek'),
-  #   howOftenFeedBirds = ifelse(
-  #     str_detect(howOftenFeedBirds, 'Not applicable'),
-  #     NA,
-  #     howOftenFeedBirds
-  #   )
-  # )
+    
+# Q5,6: table of number of dogs and cats and time dogs/cats spend outside ----
 
-#----------------------------------------------------------------------------------------*
-# ---- questions 5 and 6 ----
-#----------------------------------------------------------------------------------------*
-
-# Generate table of number of dogs and cats and time dogs/cats spend outside:
-  
 q5to6 <- rawData %>%
-  select(1, numberCats = 31, numberDogs = 32,
-         timeOutsideCat = 33, timeOutsideDog = 34) %>%
+  select(
+    1,
+    numberCats = 31,
+    numberDogs = 32,
+    timeOutsideCat = 33,
+    timeOutsideDog = 34
+  ) %>%
   mutate(
     numberCats = ifelse(str_detect(numberCats, '5 or more'), '5', numberCats),
     numberDogs = ifelse(str_detect(numberDogs, '5 or more'), '5', numberDogs),
-    timeOutsideCat = ifelse(str_detect(timeOutsideCat, 'Not applicable'), NA, timeOutsideCat),
-    timeOutsideDog = ifelse(str_detect(timeOutsideDog, 'Not applicable'), NA, timeOutsideDog),
-    timeOutsideCat = factor(timeOutsideCat),
-    timeOutsideDog = factor(timeOutsideDog)
+    timeOutsideCat = timeOutsideCat %>%
+      multi_strDetectRecode(
+        c(
+          '1 hour or' = '<1',
+          '2-11 hours' = '2-11',
+          '12 -24' = '12-24',
+          'go outside' = 'indoorOnly'
+        )
+      ),
+    timeOutsideDog = timeOutsideDog %>%
+      multi_strDetectRecode(
+        c(
+          '1 hour or' = '<1',
+          '2-11 hours' = '2-11',
+          '12 -24' = '12-24',
+          'go outside' = 'indoorOnly'
+        )
+      )
   )
-# 
-#     timeOutsideCat = ifelse(str_detect(timeOutsideCat, 'Not applicable'), NA, timeOutsideCat),
-#     timeOutsideCat = ifelse(str_detect(timeOutsideCat, '1 hour or'), '<1', timeOutsideCat),
-#     timeOutsideCat = ifelse(str_detect(timeOutsideCat, '2-11 hours'), '2-11', timeOutsideCat),
-#     timeOutsideCat = ifelse(str_detect(timeOutsideCat, '12 -24'), '12-24', timeOutsideCat),
-#     timeOutsideCat = ifelse(str_detect(timeOutsideCat, 'go outside'), 'indoorOnly', timeOutsideCat),
-#     timeOutsideDog = ifelse(str_detect(timeOutsideDog, 'Not applicable'), NA, timeOutsideDog),
-#     timeOutsideDog = ifelse(str_detect(timeOutsideDog, '1 hour or'), '<1', timeOutsideDog),
-#     timeOutsideDog = ifelse(str_detect(timeOutsideDog, '2-11 hours'), '2-11', timeOutsideDog),
-#     timeOutsideDog = ifelse(str_detect(timeOutsideDog, '12 -24'), '12-24', timeOutsideDog),
-#     timeOutsideDog = ifelse(str_detect(timeOutsideDog, 'go outside'), 'indoorOnly', timeOutsideDog)
-#   )
 
 #----------------------------------------------------------------------------------------*
 # ---- question 7 ----
 #----------------------------------------------------------------------------------------*
 
-# Generate table of whether people agree or disagree that nestwatch changed the way they
-# manage their yard:
+# Q7: table of whether nestwatch changed the way they manage their yard ----
 
 q7 <- rawData %>%
   select(1,nestwatchChangedHowIManageYard = 35) %>%
   mutate(
     nestwatchChangedHowIManageYard = nestwatchChangedHowIManageYard %>%
-    str_replace_all('Strongly agree', 'stronglyAgree') %>%
-    str_replace_all('Somewhat agree', 'somewhatAgree') %>%
-    str_replace_all('Neither agree or disagree', 'neitherAgreeOrDisagree') %>%
-    str_replace_all('Somewhat disagree', 'somewhatDisagree') %>%
-    str_replace_all('Strongly disagree', 'stronglyDisagree')
+      multi_strDetectRecode(
+        c(
+          'Strongly agree' = 'stronglyAgree',
+          'Somewhat agree' = 'somewhatAgree',
+          'Neither agree or disagree' = 'neitherAgreeOrDisagree',
+          'Somewhat disagree' = 'somewhatDisagree',
+          'Strongly disagree' = 'stronglyDisagree'
+        )
+      )
   )
 
-#----------------------------------------------------------------------------------------*
-# ---- question 8 ----
-#----------------------------------------------------------------------------------------*
-
-# Generate longform table of who participants talk to about birds in their yard and 
-# in what geographic area do they talk to people about birds in their yard:
+# Q8: longform table of who participants talk to about birds in their yard and in what geographic area do they talk to people about birds in their yard ----
 
 q8 <- rawData %>%
-  select(1,36:143) %>%
+  select(1, 36:143) %>%
   gather(key = peopleITalkToAboutBirdsInYard,
          value = location,
          2:109) %>%
   filter(location != '<NA>') %>%
-  
   mutate(
-    peopleITalkToAboutBirdsInYard = ifelse(str_detect(peopleITalkToAboutBirdsInYard,
-                                                      'Other Neighborhood Nestwatch participants'),
-                                           'nnParticipants',
-                                           peopleITalkToAboutBirdsInYard),
-    peopleITalkToAboutBirdsInYard = ifelse(str_detect(peopleITalkToAboutBirdsInYard,
-                                                      'not Neighborhood Nestwatch participants'),
-                                           'friends',
-                                           peopleITalkToAboutBirdsInYard),
-    peopleITalkToAboutBirdsInYard = ifelse(str_detect(peopleITalkToAboutBirdsInYard,
-                                                      'non Neighborhood Nestwatch participants'),
-                                           'family',
-                                           peopleITalkToAboutBirdsInYard),
     peopleITalkToAboutBirdsInYard = peopleITalkToAboutBirdsInYard %>%
-      str_replace_all('In my neighborhood:', '') %>% 
-      str_replace_all('In my city or town:', '') %>%
-      str_replace_all('In other cities or towns:', '') %>%
-      str_replace_all(':Please check the boxes if you talk with the following groups of people about birds you observe in your yard:', '')
+      multi_strDetectRecode(
+        c(
+          'Other Neighborhood Nestwatch participants' = 'nnParticipants',
+          'not Neighborhood Nestwatch participants' = 'friends',
+          'non Neighborhood Nestwatch participants' = 'family'
+        ),
+        otherValue = 'other'
+      ),
+    location = location %>%
+      multi_strDetectRecode(
+        c(
+          'talk with anyone about birds in my yard' = 'iDontTalkAboutBirds',
+          'In my neighborhood' = 'neighborhood',
+          'In other cities or towns' = 'otherCitiesOrTowns',
+          'In my city or town' = 'myCityOrTown'
+        )
+      )
   ) %>%
-  mutate(
-    location = ifelse(str_detect(location, 't talk with anyone about birds in my yard'), 'iDontTalkAboutBirdsInYard', location),
-    location = ifelse(str_detect(location, 'In my neighborhood'), 'inMyNeighborhood', location),
-    location = ifelse(str_detect(location, 'In other cities or towns'), 'inOtherCitiesOrTowns', location),
-    location = ifelse(str_detect(location, 'In my city or town'), 'inMyCityOrTown', location)    
-  ) %>%
-arrange(responseID)
+  arrange(responseID)
 
-#----------------------------------------------------------------------------------------*
-# ---- question 9 ----
-#----------------------------------------------------------------------------------------*
-
-# generating longform table of who participants talk to about landscaping their yard and 
-# in what geographic area do they talk to people about landscaping their yard
+# Q9: longform table of who participants talk to about landscaping their yard and in what geographic area do they talk to people about landscaping their yard ----
 
 q9 <- rawData %>%
   select(1, 144:195) %>%
@@ -231,92 +221,71 @@ q9 <- rawData %>%
          2:53) %>%
   filter(location != '<NA>') %>%
   mutate(
-    peopleITalkToAboutHowILandscapeYard = ifelse(str_detect(peopleITalkToAboutHowILandscapeYard,
-                                                      'Other Neighborhood Nestwatch participants'),
-                                           'nnParticipants',
-                                           peopleITalkToAboutHowILandscapeYard),
-    peopleITalkToAboutHowILandscapeYard = ifelse(str_detect(peopleITalkToAboutHowILandscapeYard,
-                                                      'not Neighborhood Nestwatch participants'),
-                                           'friends',
-                                           peopleITalkToAboutHowILandscapeYard),
-    peopleITalkToAboutHowILandscapeYard = ifelse(str_detect(peopleITalkToAboutHowILandscapeYard,
-                                                      'non Neighborhood Nestwatch participants'),
-                                           'family',
-                                           peopleITalkToAboutHowILandscapeYard),
     peopleITalkToAboutHowILandscapeYard = peopleITalkToAboutHowILandscapeYard %>%
-      str_replace_all('In my neighborhood:', '') %>% 
-      str_replace_all('In my city or town:', '') %>%
-      str_replace_all('In other cities or towns:', '') %>%
-      str_replace_all(':Please check the boxes if you talk with the following groups of people about how you landscape or manage your yard:', '')
-  ) %>%
-  mutate(
-    location = ifelse(str_detect(location, 't talk with anyone about how I landscape my yard'), 'iDontTalkAboutYard', location),
-    location = ifelse(str_detect(location, 'In my neighborhood'), 'inMyNeighborhood', location),
-    location = ifelse(str_detect(location, 'In other cities or towns'), 'inOtherCitiesOrTowns', location),
-    location = ifelse(str_detect(location, 'In my city or town'), 'inMyCityOrTown', location)    
+      multi_strDetectRecode(
+        c(
+          'my yard:Other Neighborhood Nestwatch' = 'nnParticipants',
+          'my yard:Friends' = 'friends',
+          'my yard:Family' = 'family'
+        ),
+        otherValue = 'other'
+      ),
+    location = location %>%
+      multi_strDetectRecode(
+        c(
+          'talk with anyone about how I landscape my yard' = 'iDontTalkAboutYard',
+          'In my neighborhood' = 'neighborhood',
+          'In other cities or towns' = 'otherCitiesOrTowns',
+          'In my city or town' = 'myCityOrTown'
+        )
+      )
   ) %>%
   arrange(responseID)
 
-#----------------------------------------------------------------------------------------*
-# ---- question 10 ----
-#----------------------------------------------------------------------------------------*
-
-# generating table of what region participants are from and how long they have participated
+# Q10: table of what region participants are from and how long they have participated ----
 
 q10 <- rawData %>%
   select(1, 196:198) %>%
-  gather(key = region, 
-         value = numberYears, 
+  gather(key = region,
+         value = numberYears,
          2:4) %>%
   mutate(
-    region = ifelse(str_detect(region, 'Springfield, MA'), 'Springfield', region),
-    region = ifelse(str_detect(region, 'Raleigh, NC'), 'Raleigh', region),
-    region = ifelse(str_detect(region, 'DC Metro area'), 'DC', region)
-  ) %>%
-  filter(numberYears != '<NA>') %>%
-  mutate(
+    region = region %>%
+      multi_strDetectRecode(
+        c(
+          'Springfield, MA' = 'Springfield',
+          'Raleigh, NC' = 'Raleigh',
+          'DC Metro area' = 'DC'
+        )
+      ),
     numberYears = numberYears %>%
-      str_replace_all('1 year', '1') %>%
-      str_replace_all('2 years', '2') %>%
-      str_replace_all('3 years', '3') %>%
-      str_replace_all('4 years', '4') %>%
-      str_replace_all('5 years', '5') %>%
-      str_replace_all('6 years', '6') %>%
-      str_replace_all('7 years', '7') %>%
-      str_replace_all('8 years', '8') %>%
-      str_replace_all('9 years', '9') %>%
-      str_replace_all('10 years', '10') %>%
+      str_replace_all('  years', '') %>%
+      str_replace_all('  year', '') %>%
       str_replace_all('More than 10', 'over10')
   ) %>%
-  arrange(responseID) %>%
-  filter(!(responseID == '2' & region == 'Raleigh')) %>%
-  filter(!(responseID == '2' & region == 'Springfield'))
+  arrange(responseID)
 
-#----------------------------------------------------------------------------------------*
-# ---- question 11 ----
-#----------------------------------------------------------------------------------------*
-
-# generating table with number of acres of participants' properties
+# Q11: table with number of acres of participants' properties ----
 
 q11 <- rawData %>%
   transmute(
     responseID = responseID,
     numberAcres = `How many acres is your property (1 acre is a little smaller than a football field)`
   ) %>%
-  mutate(
-    numberAcres = numberAcres %>%
-      str_replace_all('Less than a tenth of an acre', '<.1') %>%
-      str_replace_all('A tenth of an acre to a quarter acre', '.1-.25') %>%
-      str_replace_all('Quarter acre to half acre', '.25-.5') %>%
-      str_replace_all('Half acre to 1 acre', '.5-1') %>%
-      str_replace_all('1 to 5 acres', '1-5') %>%
-      str_replace_all('Larger than 5 acres', '>5')
-  ) %>%
-  mutate(
-    numberAcres = ifelse(str_detect(numberAcres, 'I don'), 'unknown', numberAcres)
+  mutate(numberAcres = numberAcres %>%
+           region = region %>%
+           multi_strDetectRecode(
+             c(
+               'Less than a tenth' = '<.1',
+               'to a quarter' = '.1-.25',
+               'Quarter acre to half' = '.25-.5',
+               'Half acre to 1' = '.5-1',
+               '1 to 5 acres' = '1-5',
+               'Larger than 5 acres' = '>5'
+             )
+           )
   )
-
-
+  
 #----------------------------------------------------------------------------------------*
 # ---- Compile tidy tables to list ----
 #----------------------------------------------------------------------------------------*
