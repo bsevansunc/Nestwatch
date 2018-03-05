@@ -54,7 +54,7 @@ q2Data <- surveyResults$q2 %>%
 
 # Prepare data for plotting:
 
-q3_4Data <- joinBind(surveyResults$q3to4) %>%````````````````````````````````````
+q3_4Data <- joinBind(surveyResults$q3to4) %>%
   mutate(
     whenFeedBirds = factor(
       whenFeedBirds,
@@ -123,11 +123,43 @@ q3_4Data %>%
 # Q5,6: number of dogs and cats and time dogs/cats spend outside ----
 #=================================================================================*
 
-q5_6Data <- surveyResults$q5to6 %>%
-  left_join(participantInfo, by = 'responseID') %>%
-  mutate(tRespondents = length(unique(responseID)))
+q5to6Data <- joinBind(surveyResults$q5to6) %>%
+  filter(numberCats != '0', !(is.na(timeOutsideCat))) %>%
+  mutate(timeOutsideCat = factor(
+    levels = c(
+      'Never',
+      'everyTwoToThreeWeeks',
+      'oneDayPerWeek',
+      'aFewDaysPerWeek',
+      'mostDaysPerWeek',
+      'everyday'
+    ),
+    labels = c(
+      'Never',
+      'Every 2 to 3 weeks',
+      'Once day a week',
+      'A few days a week',
+      'Most days',
+      'Every day'
+    )
+  )
 
-tRespondentsQ5_6 <- length(unique(q5_6Data$responseID))
+joinBind(surveyResults$q5to6) %>%
+  filter(numberCats != '0', !(is.na(timeOutsideCat))) %>%
+  group_by(timeOutsideCat, region) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  ggplot(aes(x = timeOutsideCat, y = propRespondents)) +
+  geom_bar(stat = 'identity') +
+  facet_wrap(~region) +
+  scale_y_continuous(limits = c(0, 100), expand = c(0,0)) +
+  ylab('Propotion of respondents (%)') +
+  xlab('How much time does your cat spend outside (hours per day)') +
+  theme_bw()
 
 #=================================================================================*
 # Q7: whether nestwatch changed the way they manage their yard ----
