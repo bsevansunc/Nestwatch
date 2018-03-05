@@ -1,0 +1,598 @@
+---
+title: "surveySummaryStart"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+# Question 1:
+
+#=================================================================================*
+# ---- setup ----
+#=================================================================================*
+
+source('surveyCleaning.R')
+
+# Participant info:
+
+participantInfo <- surveyResults$q10 %>%
+  left_join(surveyResults$q11, by = 'responseID') %>%
+  mutate(
+    numberYears = factor(numberYears, levels = c(1:10, 'over10')),
+    numberAcres = factor(
+      numberAcres,
+      levels = c("<.1", ".1-.25", ".25-.5", ".5-1", "1-5", ">5")
+    )
+  ) %>%
+  filter(!is.na(numberYears))
+
+joinBind <- function(x){
+  x %>%
+    left_join(participantInfo, by = 'responseID') %>%
+    bind_rows(x %>%
+                left_join(participantInfo %>%
+                            mutate(region = 'All regions'), by = 'responseID'))
+}
+```
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+#=================================================================================*
+#  Q1: proportion of total yard area managed for wildlife ----
+#=================================================================================*
+
+# Prepare data for plotting:
+
+q1Data <- joinBind(surveyResults$q1) %>%
+  mutate(
+    propYardManaged = factor(
+      propYardManaged,
+      levels = c('none', '<10', '11-25', '26-50', '51-75', '>75')
+    ) 
+  ) %>%
+  filter(!is.na(propYardManaged))
+
+# Basic plot:
+
+q1Data %>%
+  group_by(propYardManaged, region) %>%
+  filter(!is.na(region)) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  ggplot(aes(x = propYardManaged, y = propRespondents)) +
+  geom_bar(stat = 'identity') +
+  facet_wrap(~region) +
+  scale_y_continuous(limits = c(0, 50), expand = c(0,0)) +
+  ylab('Proportion of respondents (%)') +
+  xlab('Proportion of yard (%)') +
+  theme_bw() +
+  ggtitle('Question 1: What proportion of your yard do you manage for wildlife?')
+```
+
+<br>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+# Plot by number of years in the program:
+
+q1Data %>%
+  filter(!is.na(region)) %>%
+  group_by(propYardManaged, region, numberYears) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region, numberYears) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  ggplot(aes(x = numberYears, y = propRespondents, color = propYardManaged, group = propYardManaged)) +
+  geom_point(size = 5) +
+  geom_line(size = 1.25) +
+  facet_wrap(~region) +
+  theme_bw() +
+  ylab('Proportion of respondents (%)') +
+  xlab('Number of years in Neighborhood Nestwatch') +
+  ggtitle('Question 1: What proportion of your yard do you manage for wildlife?')
+```
+
+<br>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+# Plot by number of years in the program and just "none":
+
+q1Data %>%
+  filter(!is.na(region)) %>%
+  group_by(propYardManaged, region, numberYears) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region, numberYears) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = 100 - nRespondents/tRespondentsRegion*100) %>%
+  filter(propYardManaged == 'none') %>%
+  ggplot(aes(x = numberYears, y = propRespondents, group = propYardManaged)) +
+  geom_point(size = 5) +
+  geom_line(size = 1.25) +
+  facet_wrap(~region) +
+  theme_bw() +
+  ylab('Proportion of respondents (%)') +
+  xlab('Number of years in Neighborhood Nestwatch') +
+  ggtitle('Question 1: Proportion of respondents who manage their yards for wildlife')
+```
+
+<hr>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+#=================================================================================*
+# Q2: bird friendly features and # of features in yards ----
+#=================================================================================*
+
+# Prepare data for plotting:
+
+q2Data <- joinBind(surveyResults$q2) %>%
+  mutate(object = factor(
+           object,
+           levels = c('pond', 'birdBath', 'brushPile', 'birdFeeder', 'nestbox', 'berryProducingTrees'),
+           labels = c(
+             'Pond',
+             'Bird bath',
+             'Brush pile',
+             'Bird feeder',
+             'Nestbox',
+             'Berry-producing trees'
+           )
+         ))
+
+# Basic plot:
+
+q2Data %>%
+  group_by(region) %>%
+  mutate(tRespondentsRegion = length(unique(responseID))) %>%
+  filter(!is.na(region), !is.na(number), number > 0) %>%
+  group_by(object, region,tRespondentsRegion) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  ggplot(aes(x = object, y = propRespondents)) +
+  geom_bar(stat = 'identity') +
+  facet_wrap(~region) +
+  scale_y_continuous(limits = c(0, 100), expand = c(0,0)) +
+  ylab('Proportion of respondents (%)') +
+  xlab('Type of object') +
+  coord_flip() +
+  theme_bw() +
+  ggtitle('Question 2: What wildlife-friendly features are in  your yard?')
+
+```
+
+<br>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+# Does length of time in the program increase the likelihood of having a given feature?
+
+q2Data %>%
+  group_by(region, numberYears) %>%
+  mutate(tRespondentsRegion = length(unique(responseID))) %>%
+  filter(!is.na(region), !is.na(number), number > 0) %>%
+  group_by(object, region,numberYears, tRespondentsRegion) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  # filter(region == 'All regions') %>%
+  ggplot(aes(x = numberYears, y = propRespondents, color = region, group = region)) +
+  geom_point(stat = 'identity') +
+  geom_line() +
+  facet_wrap(~object) +
+  scale_y_continuous(limits = c(0, 110), expand = c(0,0)) +
+  ylab('Proportion of respondents (%)') +
+  xlab('Type of object') +
+  theme_bw() +
+  ggtitle('Question 2: What wildlife-friendly features are in  your yard?')
+
+```
+
+<hr>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+#=================================================================================*
+# Q3,4: when and how regularly participants feed birds ----
+#=================================================================================*
+
+# Prepare data for plotting:
+
+q3_4Data <- joinBind(surveyResults$q3to4) %>%
+  mutate(
+    whenFeedBirds = factor(
+      whenFeedBirds,
+      levels = c('never', 'summerOnly', 'winterOnly', 'allYear'),
+      labels = c('Never', 'Summer only', 'Winter only', 'All year')
+    ),
+    howOftenFeedBirds = ifelse(whenFeedBirds == 'Never', 'Never', howOftenFeedBirds) %>%
+      factor(
+        levels = c(
+          'Never',
+          'everyTwoToThreeWeeks',
+          'oneDayPerWeek',
+          'aFewDaysPerWeek',
+          'mostDaysPerWeek',
+          'everyday'
+        ),
+        labels = c(
+          'Never',
+          'Every 2 to 3 weeks',
+          'Once day a week',
+          'A few days a week',
+          'Most days',
+          'Every day'
+        )
+      )
+  ) %>%
+  filter(!is.na(region))
+
+# Plot how often participants feed birds:
+
+q3_4Data %>%
+  group_by(howOftenFeedBirds, region) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  ggplot(aes(x = howOftenFeedBirds, y = propRespondents)) +
+  geom_bar(stat = 'identity') +
+  facet_wrap(~region) +
+  scale_y_continuous(limits = c(0, 50), expand = c(0,0)) +
+  ylab('Proportion of respondents (%)') +
+  xlab('How often participants feed birds') +
+  theme_bw() +
+  ggtitle('Question 3,4: How often do you feed birds?') +
+  coord_flip()
+```
+
+<br>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+
+# Plot when participants feed birds:
+
+q3_4Data %>%
+  group_by(whenFeedBirds, region) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  ggplot(aes(x = whenFeedBirds, y = propRespondents)) +
+  geom_bar(stat = 'identity') +
+  facet_wrap(~region) +
+  scale_y_continuous(limits = c(0, 100), expand = c(0,0)) +
+  ylab('Proportion of respondents (%)') +
+  xlab('When do participants feed birds') +
+  theme_bw() +
+  ggtitle('Question 3,4: How often do you feed birds?') +
+  coord_flip()
+```
+
+<hr>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+#=================================================================================*
+# Q5,6: number of dogs and cats and time dogs/cats spend outside ----
+#=================================================================================*
+
+# Prepare data for plotting:
+
+q5to6Data <- joinBind(surveyResults$q5to6) %>%
+  filter(numberCats != '0',!(is.na(timeOutsideCat))) %>%
+  mutate(timeOutsideCat = factor(
+    timeOutsideCat,
+    levels = c('indoorOnly',
+               '<1',
+               '2-11',
+               '12-24'),
+    labels = c('Indoor only',
+               '<1',
+               '2-11',
+               '12-24')
+  ))
+
+# Plot time cat spends outside each day by region:
+
+q5to6Data %>%
+  filter(numberCats != '0', !(is.na(timeOutsideCat))) %>%
+  group_by(timeOutsideCat, region) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  ggplot(aes(x = timeOutsideCat, y = propRespondents)) +
+  geom_bar(stat = 'identity') +
+  facet_wrap(~region) +
+  scale_y_continuous(limits = c(0, 100), expand = c(0,0)) +
+  ylab('Proportion of respondents (%)') +
+  xlab('Number of hours outside per day') +
+  theme_bw() +
+  ggtitle('Question 5,6: How much time does your cat spend outside (hours per day)?')
+```
+
+<br>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+# Plot proportion indoor cat by region and number of years as a participant:
+
+q5to6Data %>%
+  filter(numberCats != '0', !(is.na(timeOutsideCat))) %>%
+  group_by(timeOutsideCat, region, numberYears) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region,numberYears) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  filter(timeOutsideCat == 'Indoor only') %>%
+  ggplot(aes(x = numberYears, y = propRespondents, color = region, group = region)) +
+  geom_point(stat = 'identity', size = 3) +
+  geom_line(size = 1) +
+  # facet_wrap(~timeOutsideCat) +
+  scale_y_continuous(limits = c(40, 110), expand = c(0,0)) +
+  ylab('Proportion of respondents (%)') +
+  xlab('Number of years in Neighborhood Nestwatch') +
+  theme_bw() +
+  ggtitle('Question 5,6: How much time does your cat spend outside (hours per day)?')
+
+```
+
+<hr>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+#=================================================================================*
+# Q7: whether nestwatch changed the way they manage their yard ----
+#=================================================================================*
+
+# Prepare data for plotting:
+
+q7Data <- joinBind(surveyResults$q7) %>%
+  mutate(nestwatchChangedHowIManageYard = factor(
+    nestwatchChangedHowIManageYard,
+    levels = c('stronglyDisagree',
+               'somewhatDisagree',
+               'neitherAgreeOrDisagree',
+               'somewhatAgree',
+               'stronglyAgree'),
+    labels = c('Strongly disagree',
+               'Somewhat disagree',
+               'Neither agree nor disagree',
+               'Somewhat agree',
+               'Strongly agree')
+  ))
+
+# Plot general answers by region:
+
+q7Data %>%
+  filter(!is.na(region)) %>%
+  group_by(nestwatchChangedHowIManageYard, region) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  mutate(
+    color = ifelse(nestwatchChangedHowIManageYard %in% c('Strongly disagree', 'Somewhat disagree'), 'red', 'blue'),
+    color = ifelse(nestwatchChangedHowIManageYard %in% c('Strongly agree', 'Somewhat agree'), 'blue', color),
+    color = ifelse(nestwatchChangedHowIManageYard == 'Neither agree nor disagree', 'gray80', color),
+    propRespondents = ifelse(color == 'red', -propRespondents, propRespondents)
+  ) %>%
+  ggplot(aes(x = nestwatchChangedHowIManageYard, y = propRespondents, fill = color)) +
+  geom_bar(stat = 'identity', color = 'black') +
+  facet_wrap(~region) +
+  coord_flip()+
+  scale_fill_manual(values = c(red = 'red', blue = 'blue', gray80 = 'gray80')) +
+  scale_y_continuous(limits = c(-50, 50), expand = c(0,0)) +
+  ylab('Proportion of respondents (%)') +
+  xlab('Level of agreement') +
+  theme_bw() +
+  theme(
+    legend.position = 'none'
+  ) +
+  ggtitle('Question 7: Has participanting in Neighborhood Nestwatch changed the way you\nmanage your yard?')
+```
+
+<br>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+# Plot agreement by number of years in the program:
+
+q7Data %>%
+  filter(!is.na(region)) %>%
+  mutate(nestwatchChangedHowIManageYard = ifelse(nestwatchChangedHowIManageYard %in% c('Somewhat agree', 'Strongly agree'), 'Agree', 'notAgree')) %>%
+  group_by(nestwatchChangedHowIManageYard, region, numberYears) %>%
+  summarize(nRespondents = n()) %>%
+  ungroup %>%
+  group_by(region, numberYears) %>%
+  mutate(tRespondentsRegion = sum(nRespondents)) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  filter(nestwatchChangedHowIManageYard %in% c('Agree')) %>%
+  ggplot(aes(x = numberYears, y = propRespondents, color = region, group = region)) +
+  geom_point(size = 5) +
+  geom_line(size = 1.25) +
+  theme_bw() +
+  ylab('Proportion of respondents (%)') +
+  xlab('Number of years in Neighborhood Nestwatch') +
+  ggtitle('Question 7: Has participanting in Neighborhood Nestwatch changed the way you\nmanage your yard?')
+```
+
+<hr>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+#=================================================================================*
+# Q8: who participants talk to about birds in their yard and in what  ----
+# geographic area do they talk to people about birds in their yard
+#=================================================================================*
+
+# Prepare data for plotting:
+
+q8Data <- joinBind(surveyResults$q8) %>%
+  mutate(location = factor(
+    location,
+    levels = c('iDontTalkAboutBirds',
+               'neighborhood',
+               'myCityOrTown',
+               'otherCitiesOrTowns'),
+    labels = c('I do not talk about birds',
+               'In my neighborhood',
+               'In my city or town',
+               'In other cities or towns')
+  ))
+
+# Proportion by region:
+
+q8Data %>%
+  select(responseID, location, region, numberYears) %>%
+  distinct %>%
+  filter(!is.na(region)) %>%
+  group_by(region) %>%
+  mutate(tRespondentsRegion = length(unique(responseID))) %>%
+  group_by(location, region, tRespondentsRegion) %>%
+  summarize(nRespondents = length(unique(responseID))) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  filter(location != 'I do not talk about birds') %>%
+  ggplot(aes(x = location, y = propRespondents)) +
+  geom_bar(stat = 'identity', color = 'black') +
+  facet_wrap(~region) +
+  ylab('Proportion of respondents (%)') +
+  xlab('Location') +
+  theme_bw() +
+  theme(
+    legend.position = 'none'
+  ) +
+  ggtitle('Question 8: Do you discuss birds in your yard with people ... ?') +
+  coord_flip()
+```
+
+<br>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+
+# Proportion by time in program:
+
+q8Data %>%
+  select(responseID, location, region, numberYears) %>%
+  distinct %>%
+  filter(!is.na(region)) %>%
+  group_by(region, numberYears) %>%
+  mutate(tRespondentsRegion = length(unique(responseID))) %>%
+  group_by(location, region, tRespondentsRegion, numberYears) %>%
+  summarize(nRespondents = length(unique(responseID))) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  filter(location != 'I do not talk about birds') %>%
+  ggplot(aes(x = numberYears, y = propRespondents, color = region, group = region)) +
+  geom_point(size = 5) +
+  geom_line(size = 1.25) +
+  facet_wrap(~location) +
+  theme_bw() +
+  ylab('Proportion of respondents (%)') +
+  xlab('Number of years in program') +
+  ggtitle('Question 8: Do you discuss birds in your yard with people ... ?')
+```
+
+<hr>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+#=================================================================================*
+# Q9: who participants talk to about landscaping their yard and in what  ----
+# geographic area do they talk to people about landscaping their yard
+#=================================================================================*
+
+# Prepare data for plotting:
+
+q9Data <- joinBind(surveyResults$q9) %>%
+  mutate(location = factor(
+    location,
+    levels = c('iDontTalkAboutBirds',
+               'neighborhood',
+               'myCityOrTown',
+               'otherCitiesOrTowns'),
+    labels = c('I do not talk about birds',
+               'In your neighborhood',
+               'In your city or town',
+               'In other cities or towns')
+  )) %>%
+  filter(!is.na(location))
+
+# Proportion by region:
+
+q9Data %>%
+  select(responseID, location, region, numberYears) %>%
+  distinct %>%
+  filter(!is.na(region)) %>%
+  group_by(region) %>%
+  mutate(tRespondentsRegion = length(unique(responseID))) %>%
+  group_by(location, region, tRespondentsRegion) %>%
+  summarize(nRespondents = length(unique(responseID))) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  filter(location != 'I do not talk about birds') %>%
+  ggplot(aes(x = location, y = propRespondents)) +
+  geom_bar(stat = 'identity', color = 'black') +
+  facet_wrap(~region) +
+  ylab('Proportion of respondents (%)') +
+  xlab('Location') +
+  theme_bw() +
+  theme(
+    legend.position = 'none'
+  ) +
+  ggtitle('Question 9: Do you discuss how you landscape yard with people ...') +
+  coord_flip()
+```
+
+<br>
+
+```{r echo = FALSE, warning=FALSE, message=FALSE}
+
+
+# Proportion by time in program:
+
+q9Data %>%
+  select(responseID, location, region, numberYears) %>%
+  distinct %>%
+  filter(!is.na(region)) %>%
+  group_by(region, numberYears) %>%
+  mutate(tRespondentsRegion = length(unique(responseID))) %>%
+  group_by(location, region, tRespondentsRegion, numberYears) %>%
+  summarize(nRespondents = length(unique(responseID))) %>%
+  ungroup %>%
+  mutate(propRespondents = nRespondents/tRespondentsRegion*100) %>%
+  filter(location != 'I do not talk about birds') %>%
+  ggplot(aes(x = numberYears, y = propRespondents, color = region, group = region)) +
+  geom_point(size = 5) +
+  geom_line(size = 1.25) +
+  facet_wrap(~location) +
+  theme_bw() +
+  ylab('Proportion of respondents (%)') +
+  xlab('Number of years in program') +
+  ggtitle('Question 9: Do you discuss how you landscape yard with people ... ?')
+```
+
