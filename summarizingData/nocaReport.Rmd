@@ -1,0 +1,449 @@
+---
+output:
+ html_document:
+  theme: yeti
+---
+
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<style>
+
+code{
+  background-color:#f2f2f2;
+  border-radius: 25px;
+}
+ 
+span.co{
+  color:#000080;
+  font-weight: bold;
+}
+ 
+img{
+  display: block;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+h4{
+  text-align: left;
+  font-size: 20px;
+}
+
+p{
+  text-align: left;
+  font-size: 16px;
+}
+
+ul, ol{
+  line-height: 27px;
+  text-align: left;
+  font-size: 16px;
+  margin-left: 0px;
+}
+ 
+blockquote{
+  font-size: 18px;
+  border-left: 8px solid #292093;
+  background-color: #e6ffff;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+ 
+.row{
+  margin: auto;
+}
+ 
+table {
+  border-collapse: collapse;
+}
+
+table, td, th {
+  border: 1px solid black;
+  padding: 5px;
+  text-align: center;
+  vertical-align: middle;
+}
+ 
+ /* Create two equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 50%;
+  padding: 10px;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.roundBorder {
+  border-radius: 25px;
+  border: 5px solid #30288C;
+  background: #D6EAF8;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.roundBorderBlack {
+  border-radius: 25px;
+  border: 10px solid #D3D3D3;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.roundBorderBlackEx {
+  border-radius: 5px;
+  border: 5px solid #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 2px;
+}
+
+.roundBorderEx {
+  border-radius: 3px;
+  border: 5px solid #30288C;
+  background: #D6EAF8;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 2px;
+}
+
+.tt {
+    position: relative;
+    display: inline-block;
+    class: inline; 
+    font-weight: bold;
+    font-family: "Avenir";
+    font-size: 18px;
+    border-bottom: 1px black;
+}
+
+/* Tooltip text */
+.tt .ttText {
+    visibility: hidden;
+    font-weight: normal;
+    font-size: 18px;
+    width: 200px;
+    background-color: black;
+    border: 1px solid black;
+    color: white;
+    text-align: left;
+    padding: 5px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tt:hover .ttText {
+    visibility: visible;
+}
+
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(knitr) ; library(kableExtra)
+
+options(knitr.table.format = "html")
+
+# set up ------------------------------------------------------------------
+
+library(tidyverse)
+
+## @knitr captures
+
+captures <-
+  read_csv('nocaReport/captureTable.csv')
+
+names(captures) <-
+  str_replace_all(names(captures), 'Capture', '')
+
+noca <-
+  captures %>%
+  filter(spp == 'NOCA') %>%
+  select(siteID, date, enc, bandNumber, mass:sex)
+
+
+
+# Function to add region to a plot (based on siteId field):
+
+addRegion <- function(x){
+  xState <- str_sub(x, start = -3, end = -2)
+  case_when(
+    xState == 'GA' ~ 'Atlanta',
+    xState == 'CO' ~ 'Colorado',
+    xState == 'FL' ~ 'Gainesville',
+    xState == 'NC' ~ 'Raleigh',
+    xState == 'PA' ~ 'Pittsburgh',
+    xState == 'MA' ~ 'Springfield',
+    xState %in% c('MD','DC', 'VA') ~ 'Washington, DC',
+    TRUE ~ 'noData'
+  )
+}
+
+# Functions to detect outliers:
+
+outlierBottom <- function(x){
+  median(x) - 2.5*mad(x)
+}
+
+outlierTop <- function(x){
+  median(x) + 2.5*mad(x)
+}
+```
+
+<h1>Northern Cardinal data summary</h1>
+<hr>
+<br>
+<h2><b>Some capture summary statistics</b></h2>
+
+<div class = "row">
+<div class = "column" style = "width:50%">
+<ul>
+<li>Captures by type</li>
+<ul>
+<li>Band: 
+```{r nBanded, echo = FALSE, results = 'asis'}
+noca %>%
+  filter(enc == 'B') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>Recapture: 
+```{r nRecapped, echo = FALSE, results = 'asis'}
+noca %>%
+  filter(enc == 'R') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+</ul>
+<li>Captures by age:</li>
+<ul>
+<li>Hatch year: 
+```{r nHy, echo = FALSE, results = 'asis'}
+noca %>%
+  filter(age %in% c('HY', 'L')) %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>After hatch year: 
+```{r nAHY, echo = FALSE, results = 'asis'}
+noca %>%
+  filter(age %in% c('AHY', 'ASY', 'SY')) %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>Unknown: 
+```{r nUnknown_age, echo = FALSE, results = 'asis'}
+noca %>%
+  filter(age %in% c('noData', 'U')) %>%
+  nrow() %>%
+  cat()
+```
+</li>
+</ul>
+<li>Captures by sex:</li>
+<ul>
+<li>Female: 
+```{r nFemale, echo = FALSE, results = 'asis'}
+noca %>%
+  filter(sex  == 'F') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>Male: 
+```{r nMale, echo = FALSE, results = 'asis'}
+noca %>%
+  filter(sex == 'M') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>Unknown: 
+```{r nUnknown_sex, echo = FALSE, results = 'asis'}
+noca %>%
+  filter(sex %in% c('noData', 'U')) %>%
+  nrow() %>%
+  cat()
+```
+</li>
+</ul>
+</ul>
+</div>
+
+<div class = "column" style = "width:50%">
+<ul>
+<li>Captures by region:</li>
+<ul>
+<li>Atlanta, GA: 
+```{r regions, echo = FALSE, results = 'asis'}
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  filter(region == 'Atlanta') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>Gainesville, FL: 
+```{r, echo = FALSE, results = 'asis'}
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  filter(region == 'Gainesville') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>Pittsburgh, PA: 
+```{r, echo = FALSE, results = 'asis'}
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  filter(region == 'Pittsburgh') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>Raleigh, NC: 
+```{r, echo = FALSE, results = 'asis'}
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  filter(region == 'Raleigh') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>Springfield, MA: 
+```{r, echo = FALSE, results = 'asis'}
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  filter(region == 'Springfield') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+<li>Washington, DC: 
+```{r, echo = FALSE, results = 'asis'}
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  filter(region == 'Washington, DC') %>%
+  nrow() %>%
+  cat()
+```
+</li>
+</ul>
+</ul>
+</div>
+</div>
+
+<hr>
+<h2><b>Some summary plots</b></h2>
+
+```{r massPlot, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  filter(
+    sex %in% c('M', 'F'),
+    between(mass, outlierBottom(mass), outlierTop(mass))) %>%
+  mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
+  ggplot(aes(x = region, y = mass)) +
+  geom_boxplot(aes(fill = region)) +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal body mass by region',
+       x = 'Mass (g)',
+       y = 'Region') +
+  coord_flip() +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(30, 55)) +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
+<br>
+```{r wingPlot, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  filter(
+    sex %in% c('M', 'F'),
+    between(wing, outlierBottom(wing), outlierTop(wing))) %>%
+  mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
+  ggplot(aes(x = region, y = wing)) +
+  geom_boxplot(aes(fill = region)) +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal wing chord length by region',
+       x = 'Wing chord (mm)',
+       y = 'Region') +
+  coord_flip() +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(70, 110)) +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
+<br>
+```{r tailPlot, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  mutate(tl = as.numeric(tl)) %>%
+  filter(tl < 200) %>%
+  filter(
+    sex %in% c('M', 'F'),
+    between(tl, outlierBottom(tl), outlierTop(tl))) %>%
+  mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
+  ggplot(aes(x = region, y = tl)) +
+  geom_boxplot(aes(fill = region)) +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal tail length by region',
+       x = 'Tail (mm)',
+       y = 'Region') +
+  coord_flip() +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(80, 120)) +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
+<br>
+```{r massWing, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+
+noca %>%
+  mutate(region = addRegion(siteID)) %>%
+  mutate(tl = as.numeric(tl)) %>%
+  filter(tl < 200) %>%
+  filter(
+    sex %in% c('M', 'F'),
+    between(mass, outlierBottom(mass), outlierTop(mass)),
+    between(wing, outlierBottom(wing), outlierTop(wing))) %>%
+  mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
+  ggplot(aes(x = mass, y = wing)) +
+  geom_point(aes(color = region), alpha = 0.2) +
+  stat_smooth(aes(color = region, fill = region), method = 'glm') +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal mass:wing by region',
+       x = 'Mass (g)',
+       y = 'Wing (mm)') +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
+
+
