@@ -158,6 +158,11 @@ library(knitr) ; library(kableExtra)
 
 options(knitr.table.format = "html")
 
+knitr::opts_chunk$set(message = FALSE)
+
+
+knitr::opts_chunk$set(warning = FALSE)
+
 # set up ------------------------------------------------------------------
 
 library(tidyverse)
@@ -241,20 +246,28 @@ noca <-
   captures %>%
   filter(spp == 'NOCA')
 
-# Locations:
+# Impervious:
 
-locations <-
-  read_csv('nocaReport/locationTable.csv') %>%
-  setNames(str_replace_all(names(.), 'Location', '')) %>%
-  select(siteID, long, lat)
+imp <- 
+  read_csv('nocaReport/impervious.csv') %>%
+  filter(distance == 500,
+         siteID %in% unique(noca$siteID)
+         )
 
-
+nocaImp <-
+  left_join(
+    noca, 
+    imp %>% 
+      select(-region),
+    by = 'siteID'
+  ) %>%
+  filter(!is.na(distance))
 ```
 
 <h1>Northern Cardinal data summary</h1>
 <hr>
 <br>
-<h2><b>Some capture summary statistics</b></h2>
+<h2>Some capture summary statistics</h2>
 
 <div class = "row">
 <div class = "column" style = "width:50%">
@@ -393,7 +406,7 @@ noca %>%
 </div>
 
 <hr>
-<h2><b>Some summary plots</b></h2>
+<h2>Some summary plots</h2>
 
 ```{r massPlot, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
 noca %>%
@@ -455,7 +468,6 @@ noca %>%
 ```
 <br>
 ```{r massWing, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
-
 noca %>%
   filter(sex %in% c('M', 'F')) %>%
   outlierFilter(mass) %>%
@@ -473,5 +485,142 @@ noca %>%
     panel.spacing.x = unit(1, "lines")
   )
 ```
+<hr>
+<h2>Summarizing measurements with impervious</h2>
+<br>
+```{r densityImp, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+nocaImp %>%
+  ggplot(aes(x = imp)) +
+  geom_density(aes(fill = region)) +
+  facet_wrap(~region) +
+  theme_bw() +
+  scale_x_continuous(expand = c(0,0),
+                     limits = c(0, 100)) +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0, .07)) +
+  labs(title = 'Density distribution of Northern Cardinal captures across the rural-to-urban gradient',
+       x =  'Proportion of impervious surface within 500m',
+       y = 'Point density') +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
+<br>
+```{r massImpAcross, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+nocaImp %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(mass) %>%
+  mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
+  ggplot(aes(x = imp, y = mass)) +
+  geom_point(alpha = 0.2) +
+  stat_smooth(method = 'glm') +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal mass by impervious surface across regions',
+       x = 'Proportion of impervious surface within 500m',
+       y = 'Mass (g)') +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
 
+<br>
+```{r wingImpAcross, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+nocaImp %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(wing) %>%
+  mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
+  ggplot(aes(x = imp, y = wing)) +
+  geom_point(alpha = 0.2) +
+  stat_smooth(method = 'glm') +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal wing chord length by impervious surface across regions',
+       x = 'Proportion of impervious surface within 500m',
+       y = 'Wing chord length (mm)') +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
 
+<br>
+```{r massWingImpAcross, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+nocaImp %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(wing) %>%
+  outlierFilter(mass) %>%
+  mutate(
+    sex = factor(sex, labels = c('Female', 'Male')),
+    massWing = mass/wing) %>%
+  ggplot(aes(x = imp, y = massWing)) +
+  geom_point(alpha = 0.2) +
+  stat_smooth(method = 'glm') +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal mass:wing ratio by impervious surface across regions',
+       x = 'Proportion of impervious surface within 500m',
+       y = 'Mass:wing ratio') +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
+<br>
+
+```{r massImp, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+nocaImp %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(mass) %>%
+  mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
+  ggplot(aes(x = imp, y = mass)) +
+  geom_point(aes(color = region), alpha = 0.2) +
+  stat_smooth(aes(color = region, fill = region), method = 'glm') +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal mass by impervious surface by region',
+       x = 'Proportion of impervious surface within 500m',
+       y = 'Mass (g)') +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
+
+<br>
+```{r wingImp, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+nocaImp %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(wing) %>%
+  mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
+  ggplot(aes(x = imp, y = wing)) +
+  geom_point(aes(color = region), alpha = 0.2) +
+  stat_smooth(aes(color = region, fill = region), method = 'glm') +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal wing chord length by impervious surface by region',
+       x = 'Proportion of impervious surface within 500m',
+       y = 'Wing chord length (mm)') +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
+
+<br>
+```{r massWingImp, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
+nocaImp %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(wing) %>%
+  outlierFilter(mass) %>%
+  mutate(
+    sex = factor(sex, labels = c('Female', 'Male')),
+    massWing = mass/wing) %>%
+  ggplot(aes(x = imp, y = massWing)) +
+  geom_point(aes(color = region), alpha = 0.2) +
+  stat_smooth(aes(color = region, fill = region), method = 'glm') +
+  facet_wrap(~sex) +
+  labs(title = 'Northern Cardinal mass:wing ratio by impervious surface by region',
+       x = 'Proportion of impervious surface within 500m',
+       y = 'Mass:wing ratio') +
+  theme_bw() +
+  theme(
+    panel.spacing.x = unit(1, "lines")
+  )
+```
