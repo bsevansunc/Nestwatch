@@ -3,6 +3,9 @@
 
 library(tidyverse)
 
+
+# functions ---------------------------------------------------------------
+
 # Function to add region to a plot (based on siteId field):
 
 addRegion <- function(x){
@@ -19,27 +22,7 @@ addRegion <- function(x){
   )
 }
 
-## @knitr captures
-
-captures <-
-  read_csv('data/databaseBackup_2018-02-01/captureTable.csv')
-
-names(captures) <-
-  str_replace_all(names(captures), 'Capture', '')
-
-noca <-
-  captures %>%
-  filter(spp == 'NOCA') %>%
-  select(siteID, date, enc, bandNumber, mass:sex)
-
-
-noca %>%
-  filter(
-    !sex %in% c('noData', 'U'),
-    mass < 4000) %>% 
-  ggplot(aes(x = sex, y = mass)) +
-  geom_violin() +
-  coord_flip()
+# Outlier functions:
 
 
 outlierBottom <- function(x){
@@ -56,23 +39,92 @@ outlierFilter <- function(df, var, x){
     filter(var < outlierTop(x))
 }
 
+outlierFilter <- function(df, x){
+  # Column to analyze:
+  colName <- enquo(x)
+  # Get values vector:
+  values <- df %>% 
+    select(!!colName) %>%
+    filter((!!colName) < 1000) %>%
+    unlist(use.names = FALSE)
+  # Filter:
+  df %>%
+    filter(!is.na((!!colName))) %>%
+    filter(
+      (!!colName) > median(values) - 2.5*mad(values)) %>%
+    filter(
+      (!!colName) < median(values) + 2.5*mad(values)
+      )
+}
+
+
+# add data ----------------------------------------------------------------
+
+# captures:
+
+captures <-
+  suppressWarnings(
+    read_csv('data/databaseBackup_2018-02-01/captureTable.csv') %>%
+      setNames(str_replace_all(names(.), 'Capture', '')) %>%
+      select(siteID, date, obs:bandNumber, mass:sex) %>%
+      mutate(tl  = as.numeric(tl))
+  ) %>%
+  mutate(region = addRegion(siteID)) %>%
+  filter(!region %in% c('Colorado', 'noData')) %>%
+  mutate(region = factor(
+    region,
+    levels = c('Gainesville', 'Atlanta', 'Raleigh', 'Washington, DC', 'Pittsburgh', 'Springfield'))
+    )
+
+captures <-
+  suppressWarnings(
+    read_csv('nocaReport/captureTable.csv') %>%
+      setNames(str_replace_all(names(.), 'Capture', '')) %>%
+      select(siteID, date, obs:bandNumber, mass:sex) %>%
+      mutate(tl  = as.numeric(tl))
+  )
+
+# locations:
+
+locations <-
+  read_csv('data/databaseBackup_2018-02-01/locationTable.csv') %>%
+  setNames(str_replace_all(names(.), 'Location', '')) %>%
+  select(siteID, long, lat)
+
+noca <-
+  captures %>%
+  filter(spp == 'NOCA')
+
+
+# plotting ----------------------------------------------------------------
+
+# Mass bean plot:
+
 noca %>%
-  filter(
-    sex %in% c('M', 'F'),
-    between(mass, outlierBottom(mass), outlierTop(mass))) %>%
+  filter(!sex %in% c('noData', 'U')) %>%
+  outlierFilter(mass) %>% 
+  ggplot(aes(x = sex, y = mass)) +
+  geom_violin() +
+  coord_flip()
+
+# Mass by region:
+
+noca %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(mass) %>%
   mutate(region = addRegion(siteID)) %>%
   ggplot(aes(x = region, y = mass)) +
   geom_boxplot(aes(fill = sex)) +
   coord_flip() +
   theme_bw()
 
+# Tail by region:
+
 noca %>%
   mutate(region = addRegion(siteID)) %>%
   mutate(tl = as.numeric(tl)) %>%
-  filter(tl < 200) %>%
-  filter(
-    sex %in% c('M', 'F'),
-    between(tl, outlierBottom(tl), outlierTop(tl))) %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(tl) %>%
   mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
   ggplot(aes(x = region, y = tl)) +
   geom_boxplot(aes(fill = region)) +
@@ -88,16 +140,13 @@ noca %>%
     panel.spacing.x = unit(1, "lines")
   )
 
-# Mass by wing
+# Mass by wing:
 
 noca %>%
   mutate(region = addRegion(siteID)) %>%
-  mutate(tl = as.numeric(tl)) %>%
-  filter(tl < 200) %>%
-  filter(
-    sex %in% c('M', 'F'),
-    between(mass, outlierBottom(mass), outlierTop(mass)),
-    between(wing, outlierBottom(wing), outlierTop(wing))) %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(mass) %>%
+  outlierFilter(wing) %>%
   mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
   ggplot(aes(x = wing, y = mass)) +
   geom_point(aes(color = region), alpha = 0.2) +
@@ -113,6 +162,9 @@ noca %>%
   theme(
     panel.spacing.x = unit(1, "lines")
   )
+
+
+# some models -------------------------------------------------------------
 
 noca4var <-
   noca %>%
@@ -171,11 +223,10 @@ captures %>%
   na.omit %>%
   filter(obs != 'noData') %>%
   do(fit = lm(wing ~ obs, data= .)) %>%
-  glance(fit)
+  broom::glance(fit)
   
 
   
-Orange %>% group_by(Tree) %>% do(tidy(lm(age ~ circumference, data=.)))
 
 
   

@@ -162,20 +162,8 @@ options(knitr.table.format = "html")
 
 library(tidyverse)
 
-## @knitr captures
 
-captures <-
-  read_csv('nocaReport/captureTable.csv')
-
-names(captures) <-
-  str_replace_all(names(captures), 'Capture', '')
-
-noca <-
-  captures %>%
-  filter(spp == 'NOCA') %>%
-  select(siteID, date, enc, bandNumber, mass:sex)
-
-
+# functions ---------------------------------------------------------------
 
 # Function to add region to a plot (based on siteId field):
 
@@ -193,7 +181,8 @@ addRegion <- function(x){
   )
 }
 
-# Functions to detect outliers:
+# Outlier functions:
+
 
 outlierBottom <- function(x){
   median(x) - 2.5*mad(x)
@@ -202,6 +191,64 @@ outlierBottom <- function(x){
 outlierTop <- function(x){
   median(x) + 2.5*mad(x)
 }
+
+outlierFilter <- function(df, var, x){
+  df %>%
+    filter(var > outlierBottom(x)) %>%
+    filter(var < outlierTop(x))
+}
+
+outlierFilter <- function(df, x){
+  # Column to analyze:
+  colName <- enquo(x)
+  # Get values vector:
+  values <- df %>% 
+    select(!!colName) %>%
+    filter((!!colName) < 1000) %>%
+    unlist(use.names = FALSE)
+  # Filter:
+  df %>%
+    filter(!is.na((!!colName))) %>%
+    filter(
+      (!!colName) > median(values) - 2.5*mad(values)) %>%
+    filter(
+      (!!colName) < median(values) + 2.5*mad(values)
+      )
+}
+
+# add data ----------------------------------------------------------------
+
+
+# captures
+
+captures <-
+  suppressWarnings(
+    read_csv('nocaReport/captureTable.csv') %>%
+      setNames(str_replace_all(names(.), 'Capture', '')) %>%
+      select(siteID, date, obs:bandNumber, mass:sex) %>%
+      mutate(tl  = as.numeric(tl))
+  ) %>%
+   mutate(region = addRegion(siteID)) %>%
+  filter(!region %in% c('Colorado', 'noData')) %>%
+  mutate(region = factor(
+    region,
+    levels = c('Gainesville', 'Atlanta', 'Raleigh', 'Washington, DC', 'Pittsburgh', 'Springfield'))
+    )
+
+# NOCA captures:
+
+noca <-
+  captures %>%
+  filter(spp == 'NOCA')
+
+# Locations:
+
+locations <-
+  read_csv('nocaReport/locationTable.csv') %>%
+  setNames(str_replace_all(names(.), 'Location', '')) %>%
+  select(siteID, long, lat)
+
+
 ```
 
 <h1>Northern Cardinal data summary</h1>
@@ -295,7 +342,6 @@ noca %>%
 <li>Atlanta, GA: 
 ```{r regions, echo = FALSE, results = 'asis'}
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
   filter(region == 'Atlanta') %>%
   nrow() %>%
   cat()
@@ -304,7 +350,6 @@ noca %>%
 <li>Gainesville, FL: 
 ```{r, echo = FALSE, results = 'asis'}
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
   filter(region == 'Gainesville') %>%
   nrow() %>%
   cat()
@@ -313,7 +358,6 @@ noca %>%
 <li>Pittsburgh, PA: 
 ```{r, echo = FALSE, results = 'asis'}
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
   filter(region == 'Pittsburgh') %>%
   nrow() %>%
   cat()
@@ -322,7 +366,6 @@ noca %>%
 <li>Raleigh, NC: 
 ```{r, echo = FALSE, results = 'asis'}
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
   filter(region == 'Raleigh') %>%
   nrow() %>%
   cat()
@@ -331,7 +374,6 @@ noca %>%
 <li>Springfield, MA: 
 ```{r, echo = FALSE, results = 'asis'}
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
   filter(region == 'Springfield') %>%
   nrow() %>%
   cat()
@@ -340,7 +382,6 @@ noca %>%
 <li>Washington, DC: 
 ```{r, echo = FALSE, results = 'asis'}
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
   filter(region == 'Washington, DC') %>%
   nrow() %>%
   cat()
@@ -356,18 +397,15 @@ noca %>%
 
 ```{r massPlot, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
-  filter(
-    sex %in% c('M', 'F'),
-    between(mass, outlierBottom(mass), outlierTop(mass))) %>%
-  mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(mass) %>%
   ggplot(aes(x = region, y = mass)) +
   geom_boxplot(aes(fill = region)) +
   facet_wrap(~sex) +
-  labs(title = 'Northern Cardinal body mass by region',
+  coord_flip() +
+   labs(title = 'Northern Cardinal mass by region',
        x = 'Mass (g)',
        y = 'Region') +
-  coord_flip() +
   scale_y_continuous(expand = c(0,0),
                      limits = c(30, 55)) +
   theme_bw() +
@@ -378,10 +416,8 @@ noca %>%
 <br>
 ```{r wingPlot, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
-  filter(
-    sex %in% c('M', 'F'),
-    between(wing, outlierBottom(wing), outlierTop(wing))) %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(wing) %>%
   mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
   ggplot(aes(x = region, y = wing)) +
   geom_boxplot(aes(fill = region)) +
@@ -391,7 +427,7 @@ noca %>%
        y = 'Region') +
   coord_flip() +
   scale_y_continuous(expand = c(0,0),
-                     limits = c(70, 110)) +
+                     limits = c(80, 100)) +
   theme_bw() +
   theme(
     panel.spacing.x = unit(1, "lines")
@@ -400,12 +436,8 @@ noca %>%
 <br>
 ```{r tailPlot, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
-  mutate(tl = as.numeric(tl)) %>%
-  filter(tl < 200) %>%
-  filter(
-    sex %in% c('M', 'F'),
-    between(tl, outlierBottom(tl), outlierTop(tl))) %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(tl) %>%
   mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
   ggplot(aes(x = region, y = tl)) +
   geom_boxplot(aes(fill = region)) +
@@ -425,13 +457,9 @@ noca %>%
 ```{r massWing, echo = FALSE, results = 'asis', fig.width = 8, fig.asp = .5}
 
 noca %>%
-  mutate(region = addRegion(siteID)) %>%
-  mutate(tl = as.numeric(tl)) %>%
-  filter(tl < 200) %>%
-  filter(
-    sex %in% c('M', 'F'),
-    between(mass, outlierBottom(mass), outlierTop(mass)),
-    between(wing, outlierBottom(wing), outlierTop(wing))) %>%
+  filter(sex %in% c('M', 'F')) %>%
+  outlierFilter(mass) %>%
+  outlierFilter(wing) %>%
   mutate(sex = factor(sex, labels = c('Female', 'Male'))) %>%
   ggplot(aes(x = mass, y = wing)) +
   geom_point(aes(color = region), alpha = 0.2) +
