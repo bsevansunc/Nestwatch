@@ -23,15 +23,6 @@ addRegion <- function(x){
 
 # Outlier functions:
 
-
-get_outlierBottom <- function(x){
-  median(x) - 2.5*mad(x)
-}
-
-get_outlierTop <- function(x){
-  median(x) + 2.5*mad(x)
-}
-
 filter_outliers <- function(df, x){
   # Column to analyze:
   colName <- enquo(x)
@@ -50,6 +41,79 @@ filter_outliers <- function(df, x){
     )
 }
 
+# Function to subset values for a given species and measurement:
+
+subsetMeasure <- function(focalSpp, focalMeasure){
+  captures %>%
+    filter(spp == focalSpp) %>%
+    select(values = focalMeasure) %>%
+    na.omit %>%
+    filter(values < 1000) %>%
+    filter_outliers(values) %>%
+    .$values
+}
+
+# function to plot distributions
+
+plotMeasureDist <- function(x, xText, titleText){
+  ggplot(data.frame(x = x), aes(x)) +
+    stat_function(
+      fun = dnorm,
+      args = list(
+        mean = mean(x), 
+        sd = sd(x)),
+      geom = 'area',
+      fill = '#b30000', 
+      color = 'black',
+      size = 1) +
+    stat_function(
+      fun = dnorm, 
+      args = list(
+        mean = mean(x),
+        sd = sd(x)),
+      xlim = c(mean(x) - sd(x),
+               mean(x) + sd(x)),
+      geom = "area", 
+      fill = '#0000CD',
+      color = 'black',
+      size = 1,
+      alpha = 1) +
+    scale_x_continuous(
+      limits = c(min(x), max(x)),
+      breaks = c(min(x), 
+                 mean(x) - sd(x),
+                 mean(x),
+                 mean(x) + sd(x),
+                 max(x)),
+      labels = c(round(min(x),1), 
+                 round(mean(x) - sd(x), 1),
+                 round(mean(x), 1),
+                 round(mean(x) + sd(x), 1),
+                 round(max(x), 1)
+      )
+    ) +
+    labs(
+      title = titleText,
+      x = xText
+    ) +
+    theme_bw() +
+    theme(
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank(),
+      axis.ticks.y = element_blank()
+    )
+}
+
+# function to plot a mass, wing, tail row
+
+plotGrid <- function(focalSpp){
+  grid.arrange(
+    plotMeasureDist(subsetMeasure(focalSpp, 'mass'), 'Mass (g)','Mass'),
+    plotMeasureDist(subsetMeasure(focalSpp, 'wing'), 'Wing (mm)', 'Wing chord'),
+    plotMeasureDist(subsetMeasure(focalSpp, 'tl'), 'Tail (mm)', 'Tail'),
+    nrow = 1
+  )
+}
 
 # add data ----------------------------------------------------------------
 
@@ -69,6 +133,9 @@ captures <-
     levels = c('Gainesville', 'Atlanta', 'Raleigh', 'Washington, DC', 'Pittsburgh', 'Springfield'))
   )
 
+
+# get species measurement vectors -----------------------------------------
+
 focalSpp <-
   c('AMRO',
     'BCCH',
@@ -82,89 +149,22 @@ focalSpp <-
     'SOSP',
     'TUTI')
 
-measures <- 
-  c('mass',
-    'wing',
-    'tl')
+# Function to save grid for a given species:
 
-captureList <- vector('list', length = length(focalSpp))
+saveGrid <- function(gridDir, focalSpp){
+  g <- plotGrid(focalSpp)
+  outPath <- paste(gridDir, focalSpp, sep = '/')
+  ggsave(file = outPath, g)
+}
 
 
 for(i in seq_along(focalSpp)){
-  # Get values for a given measure:
-  x <- captures %>%
-    filter(spp == focalSpp[i]) %>%
-    select(measures[j]) %>%
-    unlist(use.names = FALSE)
-  # Remove outliers:
-  x_noOutlier <-
-    x %>%
-    subset(between(x,
-                   get_outlierBottom(x),
-                   get_outlierTop(x))) %>%
-    # plyr::round_any(.5) %>%
-    as_tibble
-  
- 
-  
-  # Get cumulative values:
-  # Get gradient breaks:
-  get_gradBreaks <- function(x){
-    c(mean(x) - sd(x), mean(x) + sd(x))
-  }
-  
-
-  captures %>%
-    filter(spp == focalSpp[i]) %>%
-    filter(mass < 1000, wing < 1000) #%>%
-    # ggplot(aes(x = wing, y = mass)) +
-    # stat_density_2d(aes(fill = ..level..), geom = 'polygon')
-    
-  x_noOutlier %>%
-    ggplot(aes(x = value)) +
-    geom_density(fill = 'gray') +
-    scale_fill_gradientn(breaks = get_gradBreaks(x_noOutlier$value),
-                         colors = c('Blue', 'Red'))
-  
-  rnorm(100000, mean = mean(x_noOutlier$value), sd = sd(x_noOutlier$value)) %>% density %>% plot
-
-    
-  
-  x_noOutlier %>%
-    group_by(value) %>%
-    summarize(n = n()) %>%
-    mutate(
-      propSamples = n/sum(n),
-      cumProp = cumsum(propSamples),
-      cInterval = case_when(
-        cumProp <= .025 | cumProp >= .975 ~ 'c05',
-        cumProp <= .05 | cumProp >= .95 ~ 'c10',
-        TRUE ~ 'c90'
-      )) %>%
-    ggplot(aes(x = value, y = propSamples, color = cInterval)) + geom_line()
-  
-  # Get density
-  x_density <-
-    x %>%
-    density(
-      from = get_outlierBottom(x),
-      to = get_outlierTop(x)
-    )
-  densityDf <- data_frame(
-    measurement_value = x_density$x, 
-    density_value = x_density$y
-  ) %>%
-    mutate(cumSum = cumsum(density_value))
-  
+  g <- plotGrid(focalSpp[i])
+  outPath <-  
+    paste0(
+      'distributionPlots/',
+      tolower(focalSpp[i]),
+      '.png')
+  ggsave(outPath, plot = g, width = 10, height = 3)
 }
-
-captures %>%
-  filter(mass > 1000) %>%
-  group_by(spp) %>%
-  outlierFilter(mass) 
-  
-  
-  ggplot(aes(x = mass)) +
-  geom_density()
-  
 
