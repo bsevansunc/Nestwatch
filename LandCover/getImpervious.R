@@ -87,7 +87,8 @@ for(i in seq_along(regions)){
   region_dfList[[i]] <- bind_rows(distance_dfList)
 }
 
-region_df <- bind_rows(region_dfList)
+region_df <- bind_rows(region_dfList) %>%
+  select(-c(long.1, lat.1))
 
 write_csv(region_df, 'data/impervious.csv')
 
