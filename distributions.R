@@ -63,7 +63,7 @@ plotMeasureDist <- function(x, xText, titleText){
         mean = mean(x), 
         sd = sd(x)),
       geom = 'area',
-      fill = '#b30000', 
+      fill = '#ff6666',#'#b30000', 
       color = 'black',
       size = 1) +
     stat_function(
@@ -74,7 +74,7 @@ plotMeasureDist <- function(x, xText, titleText){
       xlim = c(mean(x) - sd(x),
                mean(x) + sd(x)),
       geom = "area", 
-      fill = '#0000CD',
+      fill = '#99c2ff',#0000CD',
       color = 'black',
       size = 1,
       alpha = 1) +
@@ -100,18 +100,25 @@ plotMeasureDist <- function(x, xText, titleText){
     theme(
       axis.text.y = element_blank(),
       axis.title.y = element_blank(),
-      axis.ticks.y = element_blank()
+      # axis.title.x = element_text(size = rel(1.2)),
+      axis.ticks.y = element_blank(),
+      axis.text.x = element_text(size = rel(1))
     )
 }
 
 # function to plot a mass, wing, tail row
 
-plotGrid <- function(focalSpp){
+plotGrid <- function(focalSpp, mainTitle){
+  require(grid)
   grid.arrange(
-    plotMeasureDist(subsetMeasure(focalSpp, 'mass'), 'Mass (g)','Mass'),
-    plotMeasureDist(subsetMeasure(focalSpp, 'wing'), 'Wing (mm)', 'Wing chord'),
-    plotMeasureDist(subsetMeasure(focalSpp, 'tl'), 'Tail (mm)', 'Tail'),
-    nrow = 1
+    plotMeasureDist(subsetMeasure(focalSpp, 'mass'), 'Mass (g)',''),
+    plotMeasureDist(subsetMeasure(focalSpp, 'wing'), 'Wing (mm)', ''),
+    plotMeasureDist(subsetMeasure(focalSpp, 'tl'), 'Tail (mm)', ''),
+    nrow = 1,
+    left = textGrob(
+      mainTitle,
+      rot= 90,
+      gp=gpar(fontsize=12, fontface = 'bold'))
   )
 }
 
@@ -137,34 +144,68 @@ captures <-
 # get species measurement vectors -----------------------------------------
 
 focalSpp <-
-  c('AMRO',
-    'BCCH',
-    'BRTH',
-    "CACH",
-    "CARW",
-    'EAPH',
-    'GRCA',
-    'NOCA',
-    'NOMO',
-    'SOSP',
-    'TUTI')
+  c('American Robin' = 'AMRO',
+    'Black-capped chickadee' = 'BCCH',
+    'Brown thrasher' = 'BRTH',
+    'Carolina chickadee' = "CACH",
+    'Carolina wren' = "CARW",
+    'Eastern phoebe' = 'EAPH',
+    'Gray catbird' = 'GRCA',
+    'Northern cardinal' = 'NOCA',
+    'Northern mockingbird' = 'NOMO',
+    'Song sparrow' = 'SOSP',
+    'Tufted titmouse' =  'TUTI')
 
-# Function to save grid for a given species:
-
-saveGrid <- function(gridDir, focalSpp){
-  g <- plotGrid(focalSpp)
-  outPath <- paste(gridDir, focalSpp, sep = '/')
-  ggsave(file = outPath, g)
-}
-
+plotList <- vector('list', length = length(focalSpp))
 
 for(i in seq_along(focalSpp)){
-  g <- plotGrid(focalSpp[i])
-  outPath <-  
-    paste0(
-      'distributionPlots/',
-      tolower(focalSpp[i]),
-      '.png')
-  ggsave(outPath, plot = g, width = 10, height = 3)
+  plotList[[i]] <- plotGrid(focalSpp[i], names(focalSpp)[i])
 }
+
+grid.arrange(
+  plotList[[1]],
+  plotList[[2]],
+  plotList[[3]],
+  plotList[[4]],
+  nrow = 4
+) %>%
+  ggsave(file = 'distributions_amro-cach.pdf',
+         width = 7.5,
+         height = 10)
+
+grid.arrange(
+  plotList[[1]],
+  plotList[[2]],
+  plotList[[3]],
+  plotList[[4]],
+  nrow = 4
+) %>%
+  ggsave(file = 'distributionPlots/distributions_amro-cach.pdf',
+         width = 7.5,
+         height = 10)
+
+grid.arrange(
+  plotList[[5]],
+  plotList[[6]],
+  plotList[[7]],
+  plotList[[8]],
+  nrow = 4
+) %>%
+  ggsave(file = 'distributionPlots/distributions_carw-noca.pdf',
+         width = 7.5,
+         height = 10)
+
+grid.arrange(
+  plotList[[9]],
+  plotList[[10]],
+  plotList[[11]],
+  nrow = 3
+) %>%
+  ggsave(file = 'distributionPlots/distributions_nomo-tuti.pdf',
+         width = 7.5,
+         height = 7.5)
+
+
+
+
 
