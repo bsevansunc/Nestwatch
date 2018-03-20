@@ -176,38 +176,15 @@ grid.arrange(
 
 # save png files ----------------------------------------------------------
 
-grid.arrange(
-  plotList[[1]],
-  plotList[[2]],
-  plotList[[3]],
-  plotList[[4]],
-  nrow = 4
-) %>%
-  ggsave(file = 'distributionPlots/distributions_amro-cach.png',
-         width = 7.5,
-         height = 10)
-
-grid.arrange(
-  plotList[[5]],
-  plotList[[6]],
-  plotList[[7]],
-  plotList[[8]],
-  nrow = 4
-) %>%
-  ggsave(file = 'distributionPlots/distributions_carw-noca.png',
-         width = 7.5,
-         height = 10)
-
-grid.arrange(
-  plotList[[9]],
-  plotList[[10]],
-  plotList[[11]],
-  nrow = 3
-) %>%
-  ggsave(file = 'distributionPlots/distributions_nomo-tuti.png',
-         width = 7.5,
-         height = 7.5)
-
-
+for(i in seq_along(focalSpp)){
+  plotList[[i]] %>%
+    ggsave(
+      filename = paste0('distributionPlots/distributions_',
+             focalSpp[i],
+             '.png'),
+      width = 7.5,
+      height = 2.5
+    )
+}
 
 
