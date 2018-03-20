@@ -92,6 +92,9 @@ region_df <- bind_rows(region_dfList) %>%
 
 write_csv(region_df, 'data/impervious.csv')
 
-
-
+region_df %>%
+  filter(str_detect(siteID, 'BRAD')) %>%
+  select(long, lat) %>%
+  distinct %>%
+  View
 
