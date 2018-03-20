@@ -5,22 +5,6 @@ library(tidyverse)
 
 # functions ---------------------------------------------------------------
 
-# Function to add region to a plot (based on siteId field):
-
-addRegion <- function(x){
-  xState <- str_sub(x, start = -3, end = -2)
-  case_when(
-    xState == 'GA' ~ 'Atlanta',
-    xState == 'CO' ~ 'Colorado',
-    xState == 'FL' ~ 'Gainesville',
-    xState == 'NC' ~ 'Raleigh',
-    xState == 'PA' ~ 'Pittsburgh',
-    xState == 'MA' ~ 'Springfield',
-    xState %in% c('MD','DC', 'VA') ~ 'Washington, DC',
-    TRUE ~ 'noData'
-  )
-}
-
 # Outlier functions:
 
 filter_outliers <- function(df, x){
@@ -124,20 +108,12 @@ plotGrid <- function(focalSpp, mainTitle){
 
 # add data ----------------------------------------------------------------
 
-# captures:
-
 captures <-
   suppressWarnings(
     read_csv('data/databaseBackup_2018-02-01/captureTable.csv') %>%
       setNames(str_replace_all(names(.), 'Capture', '')) %>%
       select(siteID, date, obs:bandNumber, mass:sex) %>%
       mutate(tl  = as.numeric(tl))
-  ) %>%
-  mutate(region = addRegion(siteID)) %>%
-  filter(!region %in% c('Colorado', 'noData')) %>%
-  mutate(region = factor(
-    region,
-    levels = c('Gainesville', 'Atlanta', 'Raleigh', 'Washington, DC', 'Pittsburgh', 'Springfield'))
   )
 
 
@@ -162,16 +138,8 @@ for(i in seq_along(focalSpp)){
   plotList[[i]] <- plotGrid(focalSpp[i], names(focalSpp)[i])
 }
 
-grid.arrange(
-  plotList[[1]],
-  plotList[[2]],
-  plotList[[3]],
-  plotList[[4]],
-  nrow = 4
-) %>%
-  ggsave(file = 'distributions_amro-cach.pdf',
-         width = 7.5,
-         height = 10)
+
+# save pdf files ----------------------------------------------------------
 
 grid.arrange(
   plotList[[1]],
@@ -205,6 +173,40 @@ grid.arrange(
          width = 7.5,
          height = 7.5)
 
+
+# save png files ----------------------------------------------------------
+
+grid.arrange(
+  plotList[[1]],
+  plotList[[2]],
+  plotList[[3]],
+  plotList[[4]],
+  nrow = 4
+) %>%
+  ggsave(file = 'distributionPlots/distributions_amro-cach.png',
+         width = 7.5,
+         height = 10)
+
+grid.arrange(
+  plotList[[5]],
+  plotList[[6]],
+  plotList[[7]],
+  plotList[[8]],
+  nrow = 4
+) %>%
+  ggsave(file = 'distributionPlots/distributions_carw-noca.png',
+         width = 7.5,
+         height = 10)
+
+grid.arrange(
+  plotList[[9]],
+  plotList[[10]],
+  plotList[[11]],
+  nrow = 3
+) %>%
+  ggsave(file = 'distributionPlots/distributions_nomo-tuti.png',
+         width = 7.5,
+         height = 7.5)
 
 
 
