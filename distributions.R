@@ -132,11 +132,42 @@ focalSpp <-
     'Song sparrow' = 'SOSP',
     'Tufted titmouse' =  'TUTI')
 
+
+# summary plots -----------------------------------------------------------
+
 plotList <- vector('list', length = length(focalSpp))
 
 for(i in seq_along(focalSpp)){
   plotList[[i]] <- plotGrid(focalSpp[i], names(focalSpp)[i])
 }
+
+
+# summary table -----------------------------------------------------------
+
+
+summaryList <- vector('list', length = length(focalSpp))
+
+focalMeasures <- c('mass', 'wing', 'tl')
+
+for(i in seq_along(focalSpp)){
+  focalMeasureList <- vector('list', length = length(focalMeasures))
+  for(j in seq_along(focalMeasures)){
+    x <- subsetMeasure(focalSpp[i], focalMeasures[j])
+    focalMeasureList[[j]] <- data_frame(
+      species  = names(focalSpp)[i],
+      measure = focalMeasures[j],
+      lowerBound = min(x),
+      lowerLimit = mean(x) - sd(x),
+      mean = mean(x),
+      upperLimit = mean(x) + sd(x),
+      upperBound = max(x)
+    )
+  }
+  summaryList[[i]] <- bind_rows(focalMeasureList)
+}
+
+bind_rows(summaryList)
+
 
 
 # save pdf files ----------------------------------------------------------
